@@ -1,107 +1,131 @@
 import emailjs from "emailjs-com";
 
-// Fixed doctor details
-const doctorEmail = "srcdesigns24@gmail.com"; //checking with working email
+const doctorEmail = "srcdesigns24@gmail.com";
 const doctorPhone = "9087654321";
 
-const generateMeetingLink = async (meetingType, patientEmail, patientPhone) => {
-  console.log(meetingType, "check meet type");
-  // let meetingLink = "You need to add Google calender to get Meet link";
+const generateMeetingLink = async (
+  meetingType,
+  patientEmail,
+  appointmentDate,
+  appointmentTime,
+  accessToken
+) => {
+  console.log("generateMeetingLink inputs:", {
+    meetingType,
+    patientEmail,
+    appointmentDate,
+    appointmentTime,
+    accessToken: accessToken ? "Provided" : "Missing",
+  });
+
   let meetingLink = "";
 
   if (meetingType === "Google Meet") {
     console.log(meetingLink, "user selected meet");
-    meetingLink = await generateGoogleMeetLink(); // 👉 enable this once calender is available to integrate
+    meetingLink = await generateGoogleMeetLink(
+      appointmentDate,
+      appointmentTime,
+      accessToken
+    );
     console.log(meetingLink, "Google Meet Condition");
-    await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
+    if (meetingLink !== "Error generating Google Meet link!") {
+      await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
+    }
   } else if (meetingType === "Zoom") {
     meetingLink = generateZoomLink();
     await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
   } else if (meetingType === "WhatsApp") {
     meetingLink = generateWhatsAppLink(doctorPhone);
-    await sendWhatsAppMessage({ doctorPhone, patientPhone, meetingLink });
+    await sendWhatsAppMessage({ doctorPhone, patientPhone: patientEmail, meetingLink });
   }
   console.log(meetingLink, "generated link");
 
   return meetingLink;
 };
 
-// Generate Google Meet Link (Using Calendar API)
-const generateGoogleMeetLink = async () => {
-  const accessToken =
-    "ya29.a0AXeO80SmXv-IWUWY0Gruj3F1hC6PznK_vvui1IY90mOROOjNu8gp02xkFbbvRN_08zYtrG31E5ojEVr0q_qjZCoShvq3hXIp6wquE0pBT14JvJy_7R1Pv4uqwyErMlLRqpTB5x2CUV4sCT5A7rMlXLbfTNgKmX0oFRTUzvMeaCgYKAQ8SARASFQHGX2MitCPXrMVHld4UIJg3Bxiorw0175";
-
-  const response = await fetch(
-    "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        summary: "Doctor Appointment",
-        start: { dateTime: new Date().toISOString() },
-        end: { dateTime: new Date(Date.now() + 3600000).toISOString() },
-        conferenceData: {
-          createRequest: {
-            requestId: `meet-${Date.now()}`, // Unique ID for Meet link
-            conferenceSolutionKey: { type: "hangoutsMeet" },
-          },
-        },
-      }),
+const generateGoogleMeetLink = async (date, appointmentTime, accessToken) => {
+  try {
+    if (!date || !appointmentTime || !accessToken) {
+      throw new Error("Date, appointment time, and access token are required.");
     }
-  );
 
-  const data = await response.json();
-  console.log("Full Response:", data);
+    console.log("generateGoogleMeetLink inputs:", { date, appointmentTime, accessToken });
 
-  // ✅ Extract Google Meet link
-  const meetLink = data.conferenceData?.entryPoints?.find(
-    (ep) => ep.entryPointType === "video"
-  )?.uri;
-  console.log(meetLink, "meetlink should go in mail");
-  return meetLink || "Failed to generate Google Meet link";
-  // const response = await fetch(
-  //   "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-  //   {
-  //     method: "POST",
-  //     headers: {
-  //       Authorization: `Bearer ${accessToken}`,
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       summary: "Doctor Appointment",
-  //       start: { dateTime: new Date().toISOString() },
-  //       end: { dateTime: new Date(Date.now() + 3600000).toISOString() },
-  //       conferenceData: {
-  //         createRequest: {
-  //           requestId: "meet123",
-  //           conferenceSolutionKey: { type: "hangoutsMeet" },
-  //         },
-  //       },
-  //     }),
-  //   }
-  // );
+    const convertTo24Hour = (time12h) => {
+      console.log("Converting time:", time12h);
+      const match = time12h.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+      if (!match) throw new Error(`Invalid time format: ${time12h}`);
 
-  // const data = await response.json();
-  // console.log(data, ":response from calender");
-  // return data.hangoutLink || "You must Update Access Token for calender dates!";
+      let [_, hours, minutes, meridian] = match;
+      hours = parseInt(hours, 10);
+      if (meridian.toUpperCase() === "PM" && hours !== 12) {
+        hours += 12;
+      } else if (meridian.toUpperCase() === "AM" && hours === 12) {
+        hours = 0;
+      }
+
+      return `${String(hours).padStart(2, "0")}:${minutes}`;
+    };
+
+    const appointmentTime24 = convertTo24Hour(appointmentTime); // Use appointmentTime, not date
+    const startTimeString = `${date}T${appointmentTime24}:00.000+05:30`;
+    const startTime = new Date(startTimeString);
+
+    if (isNaN(startTime.getTime())) {
+      throw new Error(`Invalid start date format: ${startTimeString}`);
+    }
+
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+
+    console.log("Formatted Start Time:", startTime.toISOString());
+    console.log("Formatted End Time:", endTime.toISOString());
+
+    const response = await fetch(
+      "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          summary: "Doctor Appointment",
+          start: { dateTime: startTime.toISOString(), timeZone: "Asia/Kolkata" },
+          end: { dateTime: endTime.toISOString(), timeZone: "Asia/Kolkata" },
+          conferenceData: {
+            createRequest: {
+              requestId: `meet-${Date.now()}`,
+              conferenceSolutionKey: { type: "hangoutsMeet" },
+            },
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to create Meet link");
+    }
+
+    return (
+      data.conferenceData?.entryPoints?.find(
+        (ep) => ep.entryPointType === "video"
+      )?.uri || "Failed to generate Google Meet link"
+    );
+  } catch (error) {
+    console.error("Error generating Google Meet link:", error.message);
+    return "Error generating Google Meet link!";
+  }
 };
 
-// Generate Zoom Meeting Link (Fake for now, replace with Zoom API)
 const generateZoomLink = () => {
-  return `https://zoom.us/j/${Math.floor(
-    1000000000 + Math.random() * 9000000000
-  )}`;
+  return `https://zoom.us/j/${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 };
 
-// Generate WhatsApp Link
 const generateWhatsAppLink = (phone) => {
   return `https://wa.me/${phone}?text=Your appointment is confirmed!`;
 };
 
-// Send Email using EmailJS //working✅
 const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
   const serviceId = "service_grfmcgg";
   const templateId = "template_7meqepu";
@@ -109,7 +133,6 @@ const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
 
   const templateParams = {
     to_email: `${doctorEmail}, ${userEmail}`,
-    // meeting_link: meetingLink,
     from_name: "Dr",
     to_name: `${userEmail}`,
     message: meetingLink,
@@ -124,12 +147,7 @@ const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
   }
 };
 
-// Send WhatsApp Message (Using Twilio API) // FIXME:
-const sendWhatsAppMessage = async ({
-  doctorPhone,
-  patientPhone,
-  meetingLink,
-}) => {
+const sendWhatsAppMessage = async ({ doctorPhone, patientPhone, meetingLink }) => {
   const accountSid = "YOUR_TWILIO_ACCOUNT_SID";
   const authToken = "YOUR_TWILIO_AUTH_TOKEN";
   const fromNumber = "whatsapp:+YOUR_TWILIO_WHATSAPP_NUMBER";

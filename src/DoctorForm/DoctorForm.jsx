@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { generateMeetingLink } from "./generateMeetingLink ";
 import "react-toastify/dist/ReactToastify.css";
 
+const {
+  VITE_GOOGLE_REFRESH_TOKEN: initialRefreshToken,
+  VITE_GOOGLE_CLIENT_ID: clientId,
+  VITE_GOOGLE_CLIENT_SECRET: clientSecret,
+} = import.meta.env;
+
 const DoctorForm = () => {
+  // console.log("Refresh Token✅:", initialRefreshToken);
+  // console.log("Client ID✅:", clientId);
+  // console.log("Client Secret✅:", clientSecret);
   const [formData, setFormData] = useState({
     doctorName: "",
     clinicPhone: "",
@@ -18,30 +27,73 @@ const DoctorForm = () => {
     publications: "",
     articles: "",
     extraNotes: "",
-    meetingType: "", // WhatsApp, Google Meet, Zoom
-    meetingContact: "", // Phone for WhatsApp, Email for Meet/Zoom
+
+    meetingType: "",
+    meetingContact: "",
+    appointmentDate: "",
+    appointmentTime: "",
   });
 
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [color, setColor] = useState(false);
+
+  const [tokenManager, setTokenManager] = useState({
+    accessToken: "",
+    refreshToken: initialRefreshToken,
+    clientId,
+    clientSecret,
+    tokenExpiry: null,
+  });
+
+  console.log(tokenManager.accessToken, "checkTokenchanging are not");
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("accessToken");
+    const storedExpiry = localStorage.getItem("tokenExpiry");
+    if (storedToken && storedExpiry) {
+      setTokenManager((prev) => ({
+        ...prev,
+        accessToken: storedToken,
+        tokenExpiry: parseInt(storedExpiry, 10),
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (
+        tokenManager.tokenExpiry &&
+        Date.now() >= tokenManager.tokenExpiry - 60000
+      ) {
+        await refreshAccessToken();
+      }
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [tokenManager.tokenExpiry]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
 
     try {
-      const res = await generateMeetingLink(
+      const accessToken = tokenManager.accessToken || (await fetchBusySlots(formData.appointmentDate).then(() => tokenManager.accessToken));
+      if (!accessToken) throw new Error("No valid access token available");
+      const meetingLink = await generateMeetingLink(
         formData.meetingType,
-        formData.personalEmail,
-        formData.personalPhone
+        formData.personalEmail, // Patient email
+        // formData.meetingContact, // WhatsApp number or email for link
+        formData.appointmentDate,
+        formData.appointmentTime,
+        accessToken
       );
-      console.log(res);
-      toast.success("Meeting link sent successfully!");
+      console.log("Meeting Link:", meetingLink);
+      if (meetingLink !== "Error generating Google Meet link!") {
+        toast.success("Meeting link sent successfully!");
+      }
     } catch (error) {
       toast.error("Error sending meeting link.");
     }
-
-    
 
     // Validation
     if (formData.sameAsClinic === "no") {
@@ -71,8 +123,6 @@ const DoctorForm = () => {
         body: formDataToSubmit,
       });
 
-      const jsonResponse = await response.json();
-
       if (response.ok) {
         toast.success("Doctor details successfully submitted!");
         setFormData({
@@ -89,6 +139,10 @@ const DoctorForm = () => {
           publications: "",
           articles: "",
           extraNotes: "",
+          meetingType: "",
+          meetingContact: "",
+          appointmentDate: "",
+          appointmentTime: "",
         });
       } else {
         throw new Error("Failed to submit the form");
@@ -121,14 +175,227 @@ const DoctorForm = () => {
             personalEmail: "",
           };
         }
-      } else if (name === "meetingType") {
-        return {
-          ...prevData,
-          meetingType: value,
-        };
       }
       return { ...prevData, [name]: value };
     });
+  };
+
+  // const fetchBusySlots = async (selectedDate) => {
+  //   const tokenManager = {
+  //     accessToken: "",
+  //     refreshToken: import.meta.env.VITE_GOOGLE_REFRESH_TOKEN,
+  //     clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+  //     clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
+  //     tokenExpiry: null,
+  //   };
+
+  //   const refreshAccessToken = async () => {
+  //     const response = await fetch("https://oauth2.googleapis.com/token", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  //       body: new URLSearchParams({
+  //         client_id: tokenManager.clientId,
+  //         client_secret: tokenManager.clientSecret,
+  //         refresh_token: tokenManager.refreshToken,
+  //         grant_type: "refresh_token",
+  //       }),
+  //     });
+  //     const data = await response.json();
+  //     if (!response.ok) throw new Error("Token refresh failed");
+  //     tokenManager.accessToken = data.access_token;
+  //     tokenManager.tokenExpiry = Date.now() + data.expires_in * 1000;
+  //     return tokenManager.accessToken;
+  //   };
+
+  //   const getValidAccessToken = async () => {
+  //     if (!tokenManager.tokenExpiry || Date.now() >= tokenManager.tokenExpiry) {
+  //       return await refreshAccessToken();
+  //     }
+  //     return tokenManager.accessToken;
+  //   };
+
+  //   const accessToken = await getValidAccessToken();
+  //   const calendarId = "primary";
+  //   const timeMin = `${selectedDate}T00:00:00Z`;
+  //   const timeMax = `${selectedDate}T23:59:59Z`;
+
+  //   try {
+  //     const response = await fetch(
+  //       "https://www.googleapis.com/calendar/v3/freeBusy",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           timeMin,
+  //           timeMax,
+  //           timeZone: "Asia/Kolkata",
+  //           items: [{ id: calendarId }],
+  //         }),
+  //       }
+  //     );
+
+  //     const data = await response.json();
+  //     if (data.error) {
+  //       console.error("Google API Error:", data.error);
+  //       return [];
+  //     }
+  //     return data.calendars[calendarId]?.busy || [];
+  //   } catch (error) {
+  //     console.error("Error fetching busy slots:", error);
+  //     return [];
+  //   }
+  // };
+
+  const fetchBusySlots = async (selectedDate) => {
+    const refreshAccessToken = async () => {
+      try {
+        const response = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: tokenManager.clientId,
+            client_secret: tokenManager.clientSecret,
+            refresh_token: tokenManager.refreshToken,
+            grant_type: "refresh_token",
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Refresh Token Response:", data);
+          throw new Error("Token refresh failed: " + JSON.stringify(data));
+        }
+
+        // setTokenManager((prev) => ({
+        //   ...prev,
+        //   accessToken: data.access_token,
+        //   tokenExpiry: Date.now() + data.expires_in * 1000,
+        // }));
+        setTokenManager((prev) => {
+          const newState = {
+            ...prev,
+            accessToken: data.access_token,
+            tokenExpiry: Date.now() + data.expires_in * 1000,
+          };
+          localStorage.setItem("accessToken", data.access_token);
+          localStorage.setItem("tokenExpiry", newState.tokenExpiry);
+          return newState;
+        });
+
+        console.log("New Access Token:", data.access_token);
+        return data.access_token;
+      } catch (error) {
+        console.error("Refresh Error:", error);
+        toast.error("Failed to refresh token.");
+        return null;
+      }
+    };
+
+    const getValidAccessToken = async () => {
+      if (!tokenManager.tokenExpiry || Date.now() >= tokenManager.tokenExpiry) {
+        return await refreshAccessToken();
+      }
+      return tokenManager.accessToken;
+    };
+
+    const accessToken = await getValidAccessToken();
+    if (!accessToken) return [];
+
+    const calendarId = "primary";
+    const timeMin = `${selectedDate}T00:00:00Z`;
+    const timeMax = `${selectedDate}T23:59:59Z`;
+
+    try {
+      const response = await fetch(
+        "https://www.googleapis.com/calendar/v3/freeBusy",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            timeMin,
+            timeMax,
+            timeZone: "Asia/Kolkata",
+            items: [{ id: calendarId }],
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (data.error) {
+        console.error("Google API Error:", data.error);
+        return [];
+      }
+      return data.calendars[calendarId]?.busy || [];
+    } catch (error) {
+      console.error("Error fetching busy slots:", error);
+      return [];
+    }
+  };
+
+  const generateAvailableSlots = (busySlots) => {
+    const workingHours = [
+      "09:00 AM",
+      "10:00 AM",
+      "11:00 AM",
+      "12:00 PM",
+      "01:00 PM",
+      "02:00 PM",
+      "03:00 PM",
+      "04:00 PM",
+      "05:00 PM",
+    ];
+
+    const now = new Date();
+    const dateString = now.toISOString().split("T")[0];
+    const selectedDate = formData.appointmentDate;
+
+    let available = workingHours;
+
+    const busyTimes = busySlots.map((slot) => ({
+      start: new Date(slot.start).getHours(),
+      end: new Date(slot.end).getHours(),
+    }));
+
+    available = workingHours.filter((slot) => {
+      const [hourStr, , period] = slot.split(/[: ]/);
+      let slotHour = parseInt(hourStr, 10);
+      if (period === "PM" && slotHour !== 12) slotHour += 12;
+      if (period === "AM" && slotHour === 12) slotHour = 0;
+
+      return !busyTimes.some(
+        (busy) => slotHour >= busy.start && slotHour < busy.end
+      );
+    });
+
+    if (dateString === selectedDate) {
+      const CheckTime = now.getHours();
+      const nextSlotIndex = available.findIndex((slot) => {
+        const [hourStr, , period] = slot.split(/[: ]/);
+        let slotHour = parseInt(hourStr, 10);
+        if (period === "PM" && slotHour !== 12) slotHour += 12;
+        if (period === "AM" && slotHour === 12) slotHour = 0;
+
+        return slotHour > CheckTime;
+      });
+
+      const filteredSlots =
+        nextSlotIndex !== -1 ? available.slice(nextSlotIndex) : [];
+      setAvailableSlots(filteredSlots);
+    } else {
+      setAvailableSlots(available);
+    }
+  };
+
+  const handleDateChange = async (e) => {
+    const selectedDate = e.target.value;
+    setFormData({ ...formData, appointmentDate: selectedDate });
+    const busySlots = await fetchBusySlots(selectedDate);
+    generateAvailableSlots(busySlots);
   };
 
   return (
@@ -153,11 +420,14 @@ const DoctorForm = () => {
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">Clinic Phone</label>
           <input
-            type="number"
+            type="tel"
             name="clinicPhone"
             placeholder="Phone number of the clinic"
             value={formData.clinicPhone}
-            onChange={handleChange}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value.length <= 10 && /^\d*$/.test(value)) handleChange(e);
+            }}
             maxLength={10}
             required
             className="w-full border rounded px-3 py-2"
@@ -176,8 +446,6 @@ const DoctorForm = () => {
             className="w-full border rounded px-3 py-2"
           />
         </div>
-
-        {/*  */}
 
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">
@@ -212,22 +480,18 @@ const DoctorForm = () => {
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">Personal Phone</label>
           <input
-            type="text"
+            type="tel"
             name="personalPhone"
             placeholder="Your personal phone number"
             value={formData.personalPhone}
             onChange={(e) => {
               const value = e.target.value;
-              if (value.length <= 10 && /^\d*$/.test(value)) {
-                handleChange(e);
-              }
+              if (value.length <= 10 && /^\d*$/.test(value)) handleChange(e);
             }}
             maxLength={10}
             required
             className={`w-full border rounded px-3 py-2 ${
-              color
-                ? "bg-gray-200 outline-gray-400 border-2 border-gray-200 text-gray-400"
-                : ""
+              color ? "bg-gray-200 text-gray-400" : ""
             }`}
             disabled={formData.sameAsClinic === "yes"}
           />
@@ -235,30 +499,19 @@ const DoctorForm = () => {
 
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">Personal Email</label>
-
           <input
             type="email"
             name="personalEmail"
             placeholder="Your personal email"
             value={formData.personalEmail}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.length <= 10 && /^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            maxLength={10}
+            onChange={handleChange}
             required
             className={`w-full border rounded px-3 py-2 ${
-              color
-                ? "bg-gray-200 outline-gray-400 border-2 border-gray-200 text-gray-400"
-                : ""
+              color ? "bg-gray-200 text-gray-400" : ""
             }`}
             disabled={formData.sameAsClinic === "yes"}
           />
         </div>
-
-        {/*  */}
 
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">Clinic Address</label>
@@ -316,7 +569,7 @@ const DoctorForm = () => {
         </div>
 
         {formData.domainOption === "yes" && (
-          <div className="mb-4 text-left text-left">
+          <div className="mb-4 text-left">
             <label className="block font-medium mb-1">Domain Name</label>
             <input
               placeholder="www.example.com"
@@ -330,7 +583,6 @@ const DoctorForm = () => {
           </div>
         )}
 
-        {/* Meet */}
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">
             Preferred Meeting Type
@@ -349,7 +601,6 @@ const DoctorForm = () => {
           </select>
         </div>
 
-        {/* Dynamic Contact Field */}
         {formData.meetingType && (
           <div className="mb-4 text-left">
             <label className="block font-medium mb-1">
@@ -373,16 +624,54 @@ const DoctorForm = () => {
           </div>
         )}
 
-        
-
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-left">
+            <label>Date</label>
+            <input
+              type="date"
+              name="appointmentDate"
+              value={formData.appointmentDate}
+              onChange={handleDateChange}
+              required
+              min={new Date().toISOString().split("T")[0]}
+              max={
+                new Date(new Date().setMonth(new Date().getMonth() + 5))
+                  .toISOString()
+                  .split("T")[0]
+              }
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label>Available Slots:</label>
+            <select
+              name="appointmentTime"
+              value={formData.appointmentTime}
+              onChange={handleChange}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">Select a slot</option>
+              {availableSlots.length > 0 ? (
+                availableSlots.map((slot, index) => (
+                  <option key={index} value={slot}>
+                    {slot}
+                  </option>
+                ))
+              ) : (
+                <option>No slots available</option>
+              )}
+            </select>
+          </div>
+        </div>
 
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">
-            Publications
-            <span className=" text-gray-400 italic text-sm"> (optional)</span>
+            Publications{" "}
+            <span className="text-gray-400 italic text-sm">(optional)</span>
           </label>
           <textarea
-            placeholder="share your drive link"
+            placeholder="Share your drive link"
             name="publications"
             value={formData.publications}
             onChange={handleChange}
@@ -390,13 +679,13 @@ const DoctorForm = () => {
           />
         </div>
 
-        <div className="mb-4 text-left text-left">
+        <div className="mb-4 text-left">
           <label className="block font-medium mb-1">
-            Articles
-            <span className=" text-gray-400 italic text-sm"> (optional)</span>
+            Articles{" "}
+            <span className="text-gray-400 italic text-sm">(optional)</span>
           </label>
           <textarea
-            placeholder="share your drive link"
+            placeholder="Share your drive link"
             name="articles"
             value={formData.articles}
             onChange={handleChange}
@@ -406,11 +695,11 @@ const DoctorForm = () => {
 
         <div className="mb-4 text-left">
           <label className="block font-medium mb-1">
-            Extra Notes
-            <span className=" text-gray-400 italic text-sm"> (optional)</span>
+            Extra Notes{" "}
+            <span className="text-gray-400 italic text-sm">(optional)</span>
           </label>
           <textarea
-            placeholder="share your drive link"
+            placeholder="Share your drive link"
             name="extraNotes"
             value={formData.extraNotes}
             onChange={handleChange}
@@ -421,6 +710,7 @@ const DoctorForm = () => {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          disabled={isLoading}
         >
           {isLoading ? "Submitting..." : "Submit"}
         </button>
