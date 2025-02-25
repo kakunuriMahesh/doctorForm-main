@@ -36,7 +36,11 @@ const generateMeetingLink = async (
     await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
   } else if (meetingType === "WhatsApp") {
     meetingLink = generateWhatsAppLink(doctorPhone);
-    await sendWhatsAppMessage({ doctorPhone, patientPhone: patientEmail, meetingLink });
+    await sendWhatsAppMessage({
+      doctorPhone,
+      patientPhone: patientEmail,
+      meetingLink,
+    });
   }
   console.log(meetingLink, "generated link");
 
@@ -49,7 +53,11 @@ const generateGoogleMeetLink = async (date, appointmentTime, accessToken) => {
       throw new Error("Date, appointment time, and access token are required.");
     }
 
-    console.log("generateGoogleMeetLink inputs:", { date, appointmentTime, accessToken });
+    console.log("generateGoogleMeetLink inputs:", {
+      date,
+      appointmentTime,
+      accessToken,
+    });
 
     const convertTo24Hour = (time12h) => {
       console.log("Converting time:", time12h);
@@ -90,7 +98,10 @@ const generateGoogleMeetLink = async (date, appointmentTime, accessToken) => {
         },
         body: JSON.stringify({
           summary: "Doctor Appointment",
-          start: { dateTime: startTime.toISOString(), timeZone: "Asia/Kolkata" },
+          start: {
+            dateTime: startTime.toISOString(),
+            timeZone: "Asia/Kolkata",
+          },
           end: { dateTime: endTime.toISOString(), timeZone: "Asia/Kolkata" },
           conferenceData: {
             createRequest: {
@@ -119,7 +130,9 @@ const generateGoogleMeetLink = async (date, appointmentTime, accessToken) => {
 };
 
 const generateZoomLink = () => {
-  return `https://zoom.us/j/${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  return `https://zoom.us/j/${Math.floor(
+    1000000000 + Math.random() * 9000000000
+  )}`;
 };
 
 const generateWhatsAppLink = (phone) => {
@@ -129,7 +142,7 @@ const generateWhatsAppLink = (phone) => {
 const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
   const serviceId = "service_grfmcgg";
   const templateId = "template_7meqepu";
-  const userId = "CXpZcm-Yy6Clgru_h";
+  const userId = "I3FrnElOF94OEwk9Z";
 
   const templateParams = {
     to_email: `${doctorEmail}, ${userEmail}`,
@@ -147,7 +160,35 @@ const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
   }
 };
 
-const sendWhatsAppMessage = async ({ doctorPhone, patientPhone, meetingLink }) => {
+// const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
+//   const serviceId = "service_grfmcgg";
+//   const templateId = "template_7meqepu";
+//   const userId = "CXpZcm-Yy6Clgru_h";
+
+//   const templateParams = {
+//     to_email: doctorEmail, // Test with one email first
+//     from_name: "Dr",
+//     to_name: userEmail,
+//     message: meetingLink,
+//     reply_to: doctorEmail,
+//   };
+
+//   try {
+//     // Ensure initialization (if required by your version)
+//     // emailjs.init(userId); // Uncomment if needed
+//     const response = await emailjs.send(serviceId, templateId, templateParams, userId);
+//     console.log("Email sent successfully:", response);
+//   } catch (error) {
+//     console.error("Error sending email:", error.message, error.response);
+//     throw error; // Optional: rethrow for upstream handling
+//   }
+// };
+
+const sendWhatsAppMessage = async ({
+  doctorPhone,
+  patientPhone,
+  meetingLink,
+}) => {
   const accountSid = "YOUR_TWILIO_ACCOUNT_SID";
   const authToken = "YOUR_TWILIO_AUTH_TOKEN";
   const fromNumber = "whatsapp:+YOUR_TWILIO_WHATSAPP_NUMBER";

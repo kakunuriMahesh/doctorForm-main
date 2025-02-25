@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { generateMeetingLink } from "./generateMeetingLink ";
 import "react-toastify/dist/ReactToastify.css";
+import AiBot from "../AiBot";
 
 const {
   VITE_GOOGLE_REFRESH_TOKEN: initialRefreshToken,
@@ -76,25 +77,6 @@ const DoctorForm = () => {
     event.preventDefault();
     setIsLoading(true);
 
-    try {
-      const accessToken = tokenManager.accessToken || (await fetchBusySlots(formData.appointmentDate).then(() => tokenManager.accessToken));
-      if (!accessToken) throw new Error("No valid access token available");
-      const meetingLink = await generateMeetingLink(
-        formData.meetingType,
-        formData.personalEmail, // Patient email
-        // formData.meetingContact, // WhatsApp number or email for link
-        formData.appointmentDate,
-        formData.appointmentTime,
-        accessToken
-      );
-      console.log("Meeting Link:", meetingLink);
-      if (meetingLink !== "Error generating Google Meet link!") {
-        toast.success("Meeting link sent successfully!");
-      }
-    } catch (error) {
-      toast.error("Error sending meeting link.");
-    }
-
     // Validation
     if (formData.sameAsClinic === "no") {
       if (formData.personalPhone === formData.clinicPhone) {
@@ -109,48 +91,70 @@ const DoctorForm = () => {
       }
     }
 
-    const scriptURL =
-      "https://script.google.com/macros/s/AKfycbz7kKU38kFzpaoE26OlsMihWlvEgUY9ur-Uf7fbI-bnYp_4Fee2mrWW9aJOBd4uuGhi/exec";
-
     try {
-      const formDataToSubmit = new FormData();
-      Object.keys(formData).forEach((key) => {
-        formDataToSubmit.append(key, formData[key]);
-      });
+      const accessToken =
+        tokenManager.accessToken ||
+        (await fetchBusySlots(formData.appointmentDate).then(
+          () => tokenManager.accessToken
+        ));
+      if (!accessToken) throw new Error("No valid access token available");
+      const meetingLink = await generateMeetingLink(
+        formData.meetingType,
+        formData.personalEmail, // Patient email
+        formData.appointmentDate,
+        formData.appointmentTime,
+        accessToken
+        // formData.meetingContact, // WhatsApp number or email for link
+      );
+      console.log("Meeting Link:", meetingLink);
+      if (meetingLink !== "Error generating Google Meet link!") {
+        toast.success("Meeting link sent successfully!");
+        const scriptURL =
+          "https://script.google.com/macros/s/AKfycbz7kKU38kFzpaoE26OlsMihWlvEgUY9ur-Uf7fbI-bnYp_4Fee2mrWW9aJOBd4uuGhi/exec";
 
-      const response = await fetch(scriptURL, {
-        method: "POST",
-        body: formDataToSubmit,
-      });
+        try {
+          const formDataToSubmit = new FormData();
+          Object.keys(formData).forEach((key) => {
+            formDataToSubmit.append(key, formData[key]);
+          });
 
-      if (response.ok) {
-        toast.success("Doctor details successfully submitted!");
-        setFormData({
-          doctorName: "",
-          clinicPhone: "",
-          clinicEmail: "",
-          personalPhone: "",
-          personalEmail: "",
-          sameAsClinic: "no",
-          clinicAddress: "",
-          clinicAvailability: "",
-          domainOption: "no",
-          domainName: "",
-          publications: "",
-          articles: "",
-          extraNotes: "",
-          meetingType: "",
-          meetingContact: "",
-          appointmentDate: "",
-          appointmentTime: "",
-        });
-      } else {
-        throw new Error("Failed to submit the form");
+          const response = await fetch(scriptURL, {
+            method: "POST",
+            body: formDataToSubmit,
+          });
+
+          if (response.ok) {
+            toast.success("Doctor details successfully submitted!");
+            setFormData({
+              doctorName: "",
+              clinicPhone: "",
+              clinicEmail: "",
+              personalPhone: "",
+              personalEmail: "",
+              sameAsClinic: "no",
+              clinicAddress: "",
+              clinicAvailability: "",
+              domainOption: "no",
+              domainName: "",
+              publications: "",
+              articles: "",
+              extraNotes: "",
+              meetingType: "",
+              meetingContact: "",
+              appointmentDate: "",
+              appointmentTime: "",
+            });
+          } else {
+            throw new Error("Failed to submit the form");
+          }
+        } catch (error) {
+          toast.error("Error submitting the form. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
       }
     } catch (error) {
-      toast.error("Error submitting the form. Please try again.");
-    } finally {
-      setIsLoading(false);
+      toast.error("Error sending meeting link.");
     }
   };
 
@@ -337,7 +341,7 @@ const DoctorForm = () => {
     }
   };
 
-  const generateAvailableSlots = (busySlots) => {
+  const generateAvailableSlots = (busySlots, selectedDate) => {
     const workingHours = [
       "09:00 AM",
       "10:00 AM",
@@ -352,7 +356,6 @@ const DoctorForm = () => {
 
     const now = new Date();
     const dateString = now.toISOString().split("T")[0];
-    const selectedDate = formData.appointmentDate;
 
     let available = workingHours;
 
@@ -361,7 +364,7 @@ const DoctorForm = () => {
       end: new Date(slot.end).getHours(),
     }));
 
-    available = workingHours.filter((slot) => {
+    available = available.filter((slot) => {
       const [hourStr, , period] = slot.split(/[: ]/);
       let slotHour = parseInt(hourStr, 10);
       if (period === "PM" && slotHour !== 12) slotHour += 12;
@@ -379,12 +382,12 @@ const DoctorForm = () => {
         let slotHour = parseInt(hourStr, 10);
         if (period === "PM" && slotHour !== 12) slotHour += 12;
         if (period === "AM" && slotHour === 12) slotHour = 0;
-
         return slotHour > CheckTime;
       });
 
       const filteredSlots =
         nextSlotIndex !== -1 ? available.slice(nextSlotIndex) : [];
+      console.log(filteredSlots, "filteredSlots");
       setAvailableSlots(filteredSlots);
     } else {
       setAvailableSlots(available);
@@ -395,7 +398,7 @@ const DoctorForm = () => {
     const selectedDate = e.target.value;
     setFormData({ ...formData, appointmentDate: selectedDate });
     const busySlots = await fetchBusySlots(selectedDate);
-    generateAvailableSlots(busySlots);
+    generateAvailableSlots(busySlots, selectedDate);
   };
 
   return (
@@ -595,9 +598,13 @@ const DoctorForm = () => {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select Meeting Type</option>
-            <option value="WhatsApp">WhatsApp</option>
+            <option disabled value="WhatsApp">
+              WhatsApp
+            </option>
             <option value="Google Meet">Google Meet</option>
-            <option value="Zoom">Zoom</option>
+            <option disabled value="Zoom">
+              Zoom
+            </option>
           </select>
         </div>
 
@@ -723,6 +730,7 @@ const DoctorForm = () => {
         pauseOnHover
         draggable
       />
+      {/* <AiBot/>  */}
     </div>
   );
 };
