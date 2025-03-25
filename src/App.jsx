@@ -1,11 +1,9 @@
-import DoctorForm from './DoctorForm/DoctorForm'
-import './App.css'
+// import DoctorForm from './DoctorForm/DoctorForm'
+import "./App.css";
+import Home from "./Pages/Home";
 
 function App() {
-
-  return (
-    <DoctorForm/>
-  )
+  return <Home />;
 }
 
-export default App
+export default App;
