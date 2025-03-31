@@ -11,9 +11,28 @@ import {
   MessageSquareText,
   Menu,
 } from "lucide-react"; // Install lucide-react: npm install lucide-react
+import doctorImg from "../assets/doctor.jpg";
+import onlineMeet from "../assets/video-call.jpg";
+
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const Home = () => {
   const [viewOption, setViewOption] = useState(false);
+
+  const settings = {
+    dots: true, // Show dots for navigation
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1, // Show one card at a time
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    arrows: false, // Hide navigation buttons
+    adaptiveHeight: true, // Adjust height dynamically
+  };
+
   return (
     <div className="">
       {/* Navigation */}
@@ -94,86 +113,85 @@ const Home = () => {
         </div>
         <div className="mt-8 md:mt-0 md:ml-10">
           <img
-            src="https://via.placeholder.com/400x300" // Replace with actual doctor-related image URL
-            alt="Doctor Banner"
-            className="rounded-lg shadow-lg max-w-full h-auto"
+            src={doctorImg} // Replace with actual doctor-related image URL
+            alt="Doctor Banner 690x670"
+            className="rounded-lg shadow-lg max-w-full h-auto "
           />
-        </div>
-      </section>
-
-      {/* About Doctor and Services */}
-      <section id="about" className="py-16 px-4 bg-white text-center">
-        <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-8">
-          About Dr. Suhasini Geetha Barla
-        </h2>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-          <div>
-            <p className="text-lg text-gray-700 mb-4">
-              Dr. Suhasini Geetha Barla is a board-certified Psychiatrist with
-              over 15 years of experience, specializing in family medicine.
-            </p>
-            <p className="text-lg text-gray-700">
-              Our services include routine check-ups, chronic disease
-              management, and preventive care tailored to your needs.
-            </p>
-          </div>
-          <div>
-            <ul className="text-left text-lg text-gray-700 space-y-2">
-              <li>✔ Comprehensive Health Assessments</li>
-              <li>✔ Personalized Treatment Plans</li>
-              <li>✔ Telemedicine Consultations</li>
-              <li>✔ Emergency Care Support</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Articals section */}
-      <section id="about" className="py-16 px-4 bg-white">
-        <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-2">
-          News & Articles
-        </h2>
-        <p className="mb-5">
-          We use only the best quality materials on the market in order to
-          provide the best products to our patients.
-        </p>
-
-        <div className=" flex flex-wrap">
-          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
-            <img className="md:h-[230px]" src="" alt="image" />
-            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
-              Self Care
-            </button>
-            <p>Care of your Teeth</p>
-            <p>Lorem ipsum dolor sit amet consectetur.</p>
-            <p className="flex justify-end">~Anita Jackson</p>
-          </div>
-          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
-            <img className="md:h-[230px]" src="" alt="image" />
-            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
-              Self Care
-            </button>
-            <p>Care of your Teeth</p>
-            <p>Lorem ipsum dolor sit amet consectetur.</p>
-            <p className="flex justify-end">~Anita Jackson</p>
-          </div>
-          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
-            <img className="md:h-[230px]" src="" alt="image" />
-            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
-              Self Care
-            </button>
-            <p>Care of your Teeth</p>
-            <p>Lorem ipsum dolor sit amet consectetur.</p>
-            <p className="flex justify-end">~Anita Jackson</p>
-          </div>
-          
         </div>
       </section>
 
       {/* Book Appointment Section */}
       <section className="py-16 px-4 ">
         <div className=" flex md:flex-row flex-col md:items-start justify-center items-center gap-3">
-          <div className="px-[10px] w-[fit]">
+          <div className="md:order-2" id="book-appointment">
+            <DoctorForm />
+          </div>
+          <div className="order-1 flex flex-col">
+            <div className=" max-w-sm md:max-w-lg p-5">
+              <div className="">
+                <img src={onlineMeet} alt="onlineMeet" className="w-fit" />
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d950.0807726843784!2d83.32308892160653!3d17.72940934942777!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a394344d0f58c67%3A0x51369ec0d4f2546e!2sAUCE%20New%20Girls%20Hostel%20block%205!5e0!3m2!1sen!2sin!4v1742298646900!5m2!1sen!2sin"
+                  width="100%"
+                  height="fit"
+                  // style="border:0;"
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+              <Slider {...settings}>
+                {/* Office Timings */}
+                <div className="flex gap-3 items-center shadow-xl drop-shadow-xl rounded-lg p-5 w-full bg-white">
+                  <div className="bg-[#1376F8] rounded-[50%] text-white p-2 w-fit">
+                    <Clock5 size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px]">Office Timings</h2>
+                    <p className="text-[12px] text-[#3C4959] ">
+                      Monday - Saturday (9:00am to 5pm) Sunday (Closed)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex gap-3 items-center shadow-xl drop-shadow-xl rounded-lg p-5 w-full bg-white">
+                  <div className="bg-[#1376F8] rounded-[50%] text-white p-2 w-fit">
+                    <Send size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px]">Email</h2>
+                    <p className="text-[12px] text-[#3C4959] ">
+                      Check@email.com
+                    </p>
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div className="flex gap-3 items-center shadow-xl drop-shadow-xl rounded-lg p-5 w-full bg-white">
+                  <div className="bg-[#1376F8] rounded-[50%] text-white p-2 w-fit">
+                    <Phone size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px]">Phone Number</h2>
+                    <p className="text-[12px] text-[#3C4959] ">0900-78601</p>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="flex gap-3 items-center shadow-xl drop-shadow-xl rounded-lg p-5 w-full bg-white">
+                  <div className="bg-[#1376F8] rounded-[50%] text-white p-2 w-fit">
+                    <MessageSquareText size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px]">Message</h2>
+                    <p className="text-[12px] text-[#3C4959] ">+1-2064512559</p>
+                  </div>
+                </div>
+              </Slider>
+            </div>
+          </div>
+          {/* <div className="px-[10px] w-[fit]">
             <div className="">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d950.0807726843784!2d83.32308892160653!3d17.72940934942777!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a394344d0f58c67%3A0x51369ec0d4f2546e!2sAUCE%20New%20Girls%20Hostel%20block%205!5e0!3m2!1sen!2sin!4v1742298646900!5m2!1sen!2sin"
@@ -223,9 +241,75 @@ const Home = () => {
                 <p className="text-[12px] text-[#3C4959] ">+1-2064512559</p>
               </div>
             </div>
+          </div> */}
+        </div>
+      </section>
+
+      {/* Articals section */}
+      {/* <section id="about" className="py-16 px-4 bg-white">
+        <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-2">
+          News & Articles
+        </h2>
+        <p className="mb-5">
+          We use only the best quality materials on the market in order to
+          provide the best products to our patients.
+        </p>
+
+        <div className=" flex flex-wrap">
+          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
+            <img className="md:h-[230px]" src="" alt="image" />
+            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
+              Self Care
+            </button>
+            <p>Care of your Teeth</p>
+            <p>Lorem ipsum dolor sit amet consectetur.</p>
+            <p className="flex justify-end">~Anita Jackson</p>
           </div>
-          <div id="book-appointment">
-            <DoctorForm />
+          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
+            <img className="md:h-[230px]" src="" alt="image" />
+            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
+              Self Care
+            </button>
+            <p>Care of your Teeth</p>
+            <p>Lorem ipsum dolor sit amet consectetur.</p>
+            <p className="flex justify-end">~Anita Jackson</p>
+          </div>
+          <div className=" flex flex-col justify-between bg-[#E6F6FE] p-4 rounded-lg m-2 md:w-[305px] w-[250px] md:h-[420px]">
+            <img className="md:h-[230px]" src="" alt="image" />
+            <button className="bg-[#1376F8] px-[5px] py-[3px] rounded text-[10px] md:text-[13px] text-white w-fit">
+              Self Care
+            </button>
+            <p>Care of your Teeth</p>
+            <p>Lorem ipsum dolor sit amet consectetur.</p>
+            <p className="flex justify-end">~Anita Jackson</p>
+          </div>
+          
+        </div>
+      </section> */}
+
+      {/* About Doctor and Services */}
+      <section id="about" className="py-16 px-4 bg-white text-center">
+        <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-8">
+          About Dr. Suhasini Geetha Barla
+        </h2>
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+          <div>
+            <p className="text-lg text-gray-700 mb-4">
+              Dr. Suhasini Geetha Barla is a board-certified Psychiatrist with
+              over 15 years of experience, specializing in family medicine.
+            </p>
+            <p className="text-lg text-gray-700">
+              Our services include routine check-ups, chronic disease
+              management, and preventive care tailored to your needs.
+            </p>
+          </div>
+          <div>
+            <ul className="text-left text-lg text-gray-700 space-y-2">
+              <li>✔ Comprehensive Health Assessments</li>
+              <li>✔ Personalized Treatment Plans</li>
+              <li>✔ Telemedicine Consultations</li>
+              <li>✔ Emergency Care Support</li>
+            </ul>
           </div>
         </div>
       </section>
