@@ -17,7 +17,10 @@
     "lucide-react": "^0.477.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-toastify": "^11.0.2"
+    "react-phone-input-2": "^2.15.1",
+    "react-slick": "^0.30.3",
+    "react-toastify": "^11.0.2",
+    "slick-carousel": "^1.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

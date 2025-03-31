@@ -2,7 +2,8 @@ import axios from "axios";
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api", // Base URL for your backend API
+  // baseURL: "http://localhost:5000/api", // Base URL for your backend API
+  baseURL:"https://doctor-backend-pay.onrender.com/api",
   timeout: 5000, // Request timeout in milliseconds
   headers: {
     "Content-Type": "application/json", // Default headers

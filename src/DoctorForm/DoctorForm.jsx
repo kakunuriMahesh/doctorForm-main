@@ -12,6 +12,9 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+
 const {
   VITE_GOOGLE_REFRESH_TOKEN: initialRefreshToken,
   VITE_GOOGLE_CLIENT_ID: clientId,
@@ -211,6 +214,14 @@ const DoctorForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // phone
+  const handlePhoneChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      phone: value, // Update only phone number
+    }));
+  };
+
   const refreshAccessToken = async () => {
     try {
       const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -378,14 +389,16 @@ const DoctorForm = () => {
         </div>
 
         {/* Phone */}
-        <div className="relative">
+        {/* <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Phone Number
           </label>
           <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
             <Phone className="w-5 h-5 text-gray-400 ml-3" />
+          <span className="ml-3 text-gray-500 font-medium">+91</span>
             <input
               type="tel"
+              // max={10}
               name="phone"
               placeholder="Phone Number"
               value={formData.phone}
@@ -398,6 +411,31 @@ const DoctorForm = () => {
               className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
             />
           </div>
+        </div> */}
+        <div className="relative">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number:
+          </label>
+          <PhoneInput
+            country={"in"} // Default country code
+            value={formData.phone}
+            onChange={handlePhoneChange}
+            inputProps={{
+              name: "phone",
+              required: true,
+            }}
+            containerStyle={{ width: "100%" }}
+            inputStyle={{
+              width: "100%",
+              padding: "25px",
+              paddingLeft: "45px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              
+            }}
+          />
+
+          {/* <p className="mt-2 text-gray-600">Entered Phone: {formData.phone}</p> */}
         </div>
 
         {/* Email */}
@@ -483,7 +521,7 @@ const DoctorForm = () => {
               Appointment Date
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <Calendar className="w-5 h-5 text-gray-400 ml-3" /> 
+              <Calendar className="w-5 h-5 text-gray-400 ml-3" />
               <input
                 type="date"
                 name="appointmentDate"

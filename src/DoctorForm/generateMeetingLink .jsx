@@ -29,6 +29,7 @@ const generateMeetingLink = async (
     );
     console.log(meetingLink, "Google Meet Condition");
     if (meetingLink !== "Error generating Google Meet link!") {
+      console.log( patientEmail)
       await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
     }
   } else if (meetingType === "Zoom") {
