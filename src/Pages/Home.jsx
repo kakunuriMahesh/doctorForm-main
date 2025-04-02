@@ -17,9 +17,16 @@ import onlineMeet from "../assets/video-call.jpg";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+// import TestimonialsCarousel from "./TestimonialsCarousel";
+import testimonials from "../data";
 
 const Home = () => {
   const [viewOption, setViewOption] = useState(false);
+  const [activeTab, setActiveTab] = useState("All");
+  const filteredTestimonials =
+    activeTab === "All"
+      ? testimonials
+      : testimonials.filter((t) => t.category === activeTab);
 
   const settings = {
     dots: true, // Show dots for navigation
@@ -130,14 +137,15 @@ const Home = () => {
             <div className=" max-w-sm md:max-w-lg p-5">
               <div className="">
                 <img src={onlineMeet} alt="onlineMeet" className="w-fit" />
+
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d950.0807726843784!2d83.32308892160653!3d17.72940934942777!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a394344d0f58c67%3A0x51369ec0d4f2546e!2sAUCE%20New%20Girls%20Hostel%20block%205!5e0!3m2!1sen!2sin!4v1742298646900!5m2!1sen!2sin"
+                  src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3807.895289101481!2d78.5307572!3d17.3687709!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTfCsDIyJzA3LjYiTiA3OMKwMzEnNTAuNyJF!5e0!3m2!1sen!2sin!4v1743596591627!5m2!1sen!2sin"
                   width="100%"
                   height="fit"
                   // style="border:0;"
                   allowFullScreen=""
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                  referrerpolicy="no-referrer-when-downgrade"
                 ></iframe>
               </div>
               <Slider {...settings}>
@@ -292,28 +300,75 @@ const Home = () => {
         <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-8">
           About Dr. Suhasini Geetha Barla
         </h2>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+        <div className="">
           <div>
             <p className="text-lg text-gray-700 mb-4">
-              Dr. Suhasini Geetha Barla is a board-certified Psychiatrist with
-              over 15 years of experience, specializing in family medicine.
+              Dr. Suhasini Geetha is a Psychiatrist in Chaitanyapuri, Hyderabad
+              and has an experience of 16 years in this field. Dr. Suhasini
+              Geetha practices at Asha Neuromodulation Clinic in Chaitanyapuri,
+              Hyderabad. She completed MBBS from Dr. NTR University of Health
+              Sciences Andhra Pradesh in 2008 and DPM (Psychiatry) from Dr. NTR
+              University of Health Sciences Andhra Pradesh in 2013. Some of the
+              services provided by the doctor are: Psychosocial
+              rehabilitation,Psychological diagnosis (adult and child),Child and
+              Adolescent Problems and Mental health etc.
             </p>
-            <p className="text-lg text-gray-700">
+            {/* <p className="text-lg text-gray-700">
               Our services include routine check-ups, chronic disease
               management, and preventive care tailored to your needs.
-            </p>
+            </p> */}
           </div>
-          <div>
+          {/* <div>
             <ul className="text-left text-lg text-gray-700 space-y-2">
               <li>✔ Comprehensive Health Assessments</li>
               <li>✔ Personalized Treatment Plans</li>
               <li>✔ Telemedicine Consultations</li>
               <li>✔ Emergency Care Support</li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </section>
 
+      {/* testmonials */}
+      <section className="py-16 px-4">
+        <h2 className="text-xl md:text-3xl font-bold text-[#011632] mb-8">
+          Stories
+        </h2>
+        <div className="flex gap-2">
+          {["All", "Stress", "Counselling", "OCD", "General"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-md md:text-[12px] p-2 ${
+                activeTab === tab
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {tab}{" "}
+              {activeTab === tab ? `(${filteredTestimonials.length})` : ""}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-4 flex overflow-x-scroll gap-5">
+          {filteredTestimonials.length > 0 ? (
+            filteredTestimonials.map((t, index) => (
+              <div
+                key={index}
+                className="border p-4 rounded-md shadow-md w-[700px]"
+              >
+                <h3 className="font-semibold">{t.name}</h3>
+                <p className="text-gray-600 w-[400px]">{t.feedback}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No Stories available.</p>
+          )}
+        </div>
+      </section>
+
+      {/* <TestimonialsCarousel/> */}
       {/* Footer */}
       <footer id="contact" className="bg-[#E6F6FE] py-10 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
@@ -343,7 +398,8 @@ const Home = () => {
           <div>
             <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
             <p className="flex justify-center md:justify-start items-center space-x-2">
-              <MapPin size={20} /> <span>123 Health St, Wellness City</span>
+              <MapPin size={20} />{" "}
+              <span>Shop Number F - 21, Sreeman Rama Complex, Hyderabad</span>
             </p>
             <p>Email: care@dr-Suhasini.com</p>
             <p>Phone: (555) 123-4567</p>
