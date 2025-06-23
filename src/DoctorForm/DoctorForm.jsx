@@ -6,6 +6,8 @@ import { generateMeetingLink } from "./generateMeetingLink ";
 import { User, Phone, Mail, Calendar, Clock, MessageSquare } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import UnderLine from "../assets/UnderLine.svg";
+
 
 const {
   VITE_GOOGLE_REFRESH_TOKEN: initialRefreshToken,
@@ -277,9 +279,12 @@ const DoctorForm = () => {
 
   return (
     <div className="w-fit p-6 bg-white shadow-xl rounded-xl">
-      <h1 className="text-xl md:text-3xl font-bold text-[#011632] mb-8 text-center">
+      <h1 className="text-xl md:text-3xl font-bold text-[#011632] text-center">
         Book Your Appointment
       </h1>
+      <div className="flex justify-center mb-8">
+          <img src={UnderLine} alt="Underline" className="w-32 md:w-48" />
+        </div>
       <form onSubmit={handleBookAppointment} className="space-y-6">
         <div className="flex gap-4">
           <div className="relative">
