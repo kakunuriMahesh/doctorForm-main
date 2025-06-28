@@ -200,7 +200,7 @@ const Home = () => {
           </div>
         </div>
         <div className="mt-8 md:mt-0 md:ml-10 flex-shrink-0">
-          <img src={doctorImg} alt="Doctor Banner" className="rounded-lg shadow-lg max-w-full h-auto" />
+          <img src={doctorImg} alt="Doctor Banner" className="rounded-lg shadow-lg w-full h-auto max-w-md md:max-w-lg lg:max-w-xl object-cover" />
         </div>
       </section>
 
@@ -321,7 +321,7 @@ const Home = () => {
           <img src={UnderLine} alt="Underline" className="w-24 md:w-32" />
         </div>
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['All', 'Stress', 'Counselling', 'OCD', 'General'].map((tab) => (
+          {['All', 'General', 'OCD'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -341,11 +341,16 @@ const Home = () => {
                   key={index}
                   className="flex-shrink-0 min-w-[320px] max-w-[320px]  border p-4 rounded-md shadow-md bg-white flex flex-col justify-between overflow-hidden"
                 >
+                  <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <img src={doctorImg} alt="Patient" className="w-10 h-10 rounded-full object-cover border" />
+                    <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
+                      <span className="text-white font-semibold text-lg">{t.feedback.charAt(0).toUpperCase()}</span>
+                    </div>
                     <h3 className="font-semibold text-lg truncate max-w-[180px]">{t.name}</h3>
                   </div>
                   <p className="text-gray-600 text-base break-words whitespace-normal">{t.feedback}</p>
+                  </div>
+                  <a href={t.source} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition-colors">View on Google</a>
                 </div>
               ))
             ) : (
@@ -366,13 +371,19 @@ const Home = () => {
               {filteredTestimonials.concat(filteredTestimonials).map((t, index) => (
                 <div
                   key={index}
-                  className="inline-block min-w-[320px] max-w-[320px] border p-4 rounded-md shadow-md bg-white align-top mx-2 flex flex-col justify-start items-start overflow-hidden"
+                  className="inline-block min-w-[320px] max-w-[320px] border p-4 rounded-md shadow-md bg-white align-top mx-2 flex flex-col justify-between items-start overflow-hidden"
                 >
+                  <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <img src={doctorImg} alt="Patient" className="w-10 h-10 rounded-full object-cover border" />
+                    {/* <img src={doctorImg} alt="Patient" className="w-10 h-10 rounded-full object-cover border" /> */}
+                    <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
+                      <span className="text-white font-semibold text-lg">{t.feedback.charAt(0).toUpperCase()}</span>
+                    </div>
                     <h3 className="font-semibold text-lg truncate max-w-[180px]">{t.name}</h3>
                   </div>
                   <p className="text-gray-600 text-base break-words whitespace-normal">{t.feedback}</p>
+                  </div>
+                  <a href={t.source} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition-colors">View on Google</a>
                 </div>
               ))}
             </div>
@@ -512,6 +523,12 @@ const Home = () => {
         </div>
         <div className="text-center mt-8 text-sm">
           <p>© 2025 Dr. Suhasini. All rights reserved. Designed by <a href="https://srcdesigns.in" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500">srcdesigns</a></p>
+          <div className="flex justify-center md:justify-center space-x-4 mt-4">  
+            <a href="/privacy-policy" className="text-[#011632] transition hover:text-blue-500">Privacy Policy</a>
+                <a href="/terms-and-conditions" className="text-[#011632] transition hover:text-blue-500">Terms and Conditions</a>
+                <a href="/cancellation-and-refund" className="text-[#011632] transition hover:text-blue-500">Cancellation and Refund</a>
+                <a href="/shipping-and-delivery" className="text-[#011632] transition hover:text-blue-500">Shipping and Delivery</a>
+          </div>
         </div>
       </footer>
     </div>

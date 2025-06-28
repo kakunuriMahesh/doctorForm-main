@@ -1,99 +1,143 @@
 const testimonials = [
     {
       name: "Patient G. Sridhar Raju",
-      category: "General",
+      category: "Mental health",
       feedback:
-        "Srinivas sir and Dr Suhasini madam completed all 12 sessions efficiently. While 2 to 3 sessions had no counseling, the remaining sessions helped me a lot to overcome negative thoughts and feel more energetic.",
+        "Good hospital and doctor Good time management Good following Nice environment Cost reasonable Doctor counseling very nice Good receiving",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
+      name: "Verified Patient",
+      category: "Anxiety Disorders Treatment",
+      feedback:
+        "Tha Doctor was indeed very soft-spoken, kind, helpful & friendly. She listens to the patient very patiently. She gives counseling in just a friendly manner. Her words themselves will relieve maximum of your malady. Therefore, I recommend her to all that are suffering rom metal health.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "Visited Dr. Suhasini seeking help for various reasons. Mam has given me plenty of time clearly explain all the issues and listened very patiently. She then proceed to explain what the situation is, why it is the way it is, and what course pf treatment can be taken. The session was really helpful. Really thankful to Dr. Suhasini Geetha garu.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    // {
+    //   name: "Verified Patient",
+    //   category: "Stress Management Counselling",
+    //   feedback:
+    //     "The doctor is always late and this is my second time. The staff aren't friendly and have no clue when the doctor would arrive",
+    // },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "Dr. Suhasini Geetha takes care of every minute thing and explains everything in detail. He is so passionate at his work and the way he connects his patient is quite great and makes them comfortable. Added to it the staff are of good nature and kind. Even the clinic has all modern and state of the art equipment with 5 star ambience and also very very economical at the same time",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "I have consulted Dr Suhasini for Anxiety and sleep related issues. She has counselled and addressed all my current sufferings in an appropriate direction. Will be looking forward to continue counselling sessions with the doctor. Happy that I am getting right counselling for my future",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "Dr suhasini mam understand my problems she treated well i am very well improved from my symptoms very nice staff ambience is also very good. I recommend other people also to visit Dr. Suhasini mam About mental issues.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "Srinivas sir and Dr Suhasini madam All the 12 sessions were completed efficiently but 2 to 3 sessions were without counselling n the remains sessions counselling helped me alot to come out negative thoughts as well as to be energetic. Patient G. Sridhar Raju",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "rTMS treatment helped me to overcome some of my OCD problems. Dr. Srinivas was very patient and has given me the best consultation ever and helped me in managing my triggers of OCD. Dr. Suhasini Geetha was soft spoken and understood my problems, and suggested me rTMS.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "I had issues due to health which were actually false but the anxiety have taken over me thanks to asha neuro modulation clinics dilsukhnagar and and psychologist Srinivas and Suhasini psychiatrist, they they guided me using good techniques and motivation. Today iam 60% cured after just 2 weeks and i recommend them.. yes iam still on my recovery journey and confident to br out of it by another one month.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "rTMS (repetitive Transcranial Magnetic Stimulation) treatment is highly beneficial for managing OCD. It involves non-invasive brain stimulation to alleviate symptoms. Additionally, receiving excellent counseling from a psychologist, such as Mr. Srinivas, and effective prescriptions from Dr. Suhasini Mam can significantly enhance the overall treatment experience and outcomes for individuals with OCD.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "Professional staff, clean office, friendly environment. Appreciate the staff for the patient treatment, Thank you Psychologist Mr Srinivas and Dr Suhasini for you presence and patience with us (family members) and answering al our questions and concerns without hesitation. Hope easy recovery for those in care. Thank you,",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
+      category: "General",
+      feedback:
+        "The doctor was very good at her therapy. Received and counselled in a positive and effective manner. I am feeling better after visiting this clinic",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
+    },
+    {
+      name: "Verified Patient",
       category: "OCD",
       feedback:
-        "rTMS treatment helped me to overcome some of my OCD problems. Dr. Srinivas was very patient and has given me the best consultation ever, helping me manage my OCD triggers. Dr. Suhasini Geetha was soft-spoken and understood my problems, suggesting rTMS.",
+        "rTMS treatment helped me to overcome some of my OCD problems. Dr. Srinivas was very patient and has given me the best consultation ever and helped me in managing my triggers of OCD. Dr. Suhasini Geetha was soft spoken and understood my problems, and suggested me rTMS.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "I had issues due to health anxiety, but thanks to Asha Neuro Modulation Clinics, Dilsukhnagar, and Psychologist Srinivas and Psychiatrist Suhasini, they guided me with good techniques and motivation. Today I am 60% cured after just 2 weeks and highly recommend them. I am confident to recover fully in another month.",
+        "ANC branch is providing very good facilities , treatments and services this staff is eco friendly and psychologist and doctor are very friendly , thank you so much srinivas sir and Dr suhasini madam , I am so happy for this neuromodulation treatment.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "The doctor was very good at her therapy. She received and counseled me in a positive and effective manner. I am feeling better after visiting this clinic.",
+        "Dr Suhasini psychiatrist, they they guided me using good techniques and motivation Srinivas sir made me very comfortable while the treatment, I felt somewhat better after treatment",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
-      category: "OCD",
-      feedback:
-        "Deep TMS therapy was helpful for my depression. Dr. Suhasini helped me a lot, and she is a very good doctor. I highly recommend this clinic.",
-    },
-    {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "ANC branch provides very good facilities, treatments, and services. The staff is friendly, and both the psychologist and doctor are very supportive. Thank you, Srinivas sir and Dr. Suhasini madam. I am very happy with this neuromodulation treatment.",
+        "My anxiety and depression has solved by 70 percent in 3 months.Dr Suhasini is very good Doctor .ambience nice staff,I recommend this doctor",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "Dr. Suhasini and Srinivas sir guided me with good techniques and motivation. Srinivas sir made me very comfortable during the treatment. I felt much better after the treatment.",
+        "Very convenient to reach this place, doctor and staff and psychologist are very cordial. DTMS treatment is very effective for OCD and depression",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "My anxiety and depression improved by 70% in 3 months. Dr. Suhasini is a very good doctor. The clinic has a nice ambiance and friendly staff. I highly recommend this doctor.",
+        "Good doctor... well staff good ambience , well infrastructure I am very happy with my treatment I am doing well.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
     {
-      name: "Anonymous",
-      category: "OCD",
-      feedback:
-        "rTMS (Repetitive Transcranial Magnetic Stimulation) treatment is highly beneficial for managing OCD. It involves non-invasive brain stimulation to alleviate symptoms. Additionally, receiving excellent counseling from a psychologist like Mr. Srinivas and effective prescriptions from Dr. Suhasini enhances the overall treatment experience.",
-    },
-    {
-      name: "Anonymous",
+      name: "Verified Patient",
       category: "General",
       feedback:
-        "Professional staff, clean office, and a friendly environment. I appreciate the staff for their patience and support. Thank you, Psychologist Mr. Srinivas and Dr. Suhasini, for your presence and patience with us (family members), answering all our questions without hesitation. Wishing for a smooth recovery for all those in care.",
+        "Very good Doctor well staff good ambience , well infrastructure I am very happy with my treatment I am doing well.",
+        source: "https://www.practo.com/hyderabad/doctor/suhasini-geetha-psychiatrist",
     },
-    {
-      name: "Anonymous",
-      category: "OCD",
-      feedback:
-        "rTMS treatment helped me to overcome my OCD problems. Dr. Srinivas was very patient and gave me the best consultation ever. He helped me manage my OCD triggers, and Dr. Suhasini Geetha was soft-spoken and suggested rTMS.",
-    },
-    {
-      name: "Anonymous",
-      category: "General",
-      feedback:
-        "Very convenient location, friendly doctor, and cordial staff. DTMS treatment is very effective for OCD and depression.",
-    },
-    {
-      name: "Anonymous",
-      category: "General",
-      feedback:
-        "Good doctor, well-trained staff, nice ambiance, and good infrastructure. I am very happy with my treatment and doing well.",
-    },
-    {
-      name: "Anonymous",
-      category: "General",
-      feedback:
-        "Very good doctor, well-trained staff, nice ambiance, and good infrastructure. I am very happy with my treatment and doing well.",
-    },
-    {
-      name: "Anonymous",
-      category: "Stress",
-      feedback:
-        "I am so confused and worried, triggering every second. I am so depressed seeing repeated things around me. I have always done everything for others, but they never supported me when I was struggling. I feel totally addicted and cry easily from stress. What is my problem? Please suggest something.",
-    },
-    {
-      name: "Anonymous",
-      category: "Counselling",
-      feedback:
-        "The doctor is always late. This is my second visit, and the staff isn't friendly. They have no clue when the doctor would arrive.",
-    },
+    
   ];
 export default  testimonials

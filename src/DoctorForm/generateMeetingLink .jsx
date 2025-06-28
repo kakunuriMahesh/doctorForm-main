@@ -33,7 +33,7 @@ const generateMeetingLink = async (
     console.log(meetingLink, "Google Meet Condition");
     if (meetingLink !== "Error generating Google Meet link!") {
       try {
-        await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
+        await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink, appointmentDate, appointmentTime });
       } catch (emailError) {
         console.error("Failed to send email, proceeding with link:", emailError);
         // Continue even if email fails
@@ -42,7 +42,7 @@ const generateMeetingLink = async (
   } else if (meetingType === "Zoom") {
     meetingLink = generateZoomLink();
     try {
-      await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink });
+      await sendEmail({ doctorEmail, userEmail: patientEmail, meetingLink, appointmentDate, appointmentTime });
     } catch (emailError) {
       console.error("Failed to send email, proceeding with link:", emailError);
     }
@@ -140,9 +140,9 @@ const generateGoogleMeetLink = async (date, appointmentTime, accessToken) => {
 const generateZoomLink = () => "https://zoom.us/j/123456789"; // Replace with real Zoom logic
 const generateWhatsAppLink = (phone) => `https://wa.me/${phone}`;
 
-const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
+const sendEmail = async ({ doctorEmail, userEmail, meetingLink, appointmentDate, appointmentTime }) => {
   try {
-    console.log("Sending emails with params:", { doctorEmail, userEmail, meetingLink });
+    console.log("Sending emails with params:", { doctorEmail, userEmail, meetingLink, appointmentDate, appointmentTime });
 
     // Send email to the patient
     const patientResponse = await emailjs.send(
@@ -152,7 +152,20 @@ const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
         to_email: userEmail, // Patient's email
         doctor_email: doctorEmail,
         user_email: userEmail,
-        meeting_link: meetingLink,
+        message: `
+Hello,
+
+Your appointment is confirmed!
+
+Meeting Link: ${meetingLink}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+
+You can add this event to your calendar:
+https://www.google.com/calendar/render?action=TEMPLATE&text=Doctor+Appointment&dates=${appointmentDate.replace(/-/g, '')}T${appointmentTime.split(' - ')[0].replace(':', '')}00Z/${appointmentDate.replace(/-/g, '')}T${appointmentTime.split(' - ')[1].replace(':', '')}00Z&details=Join+the+meeting+at:+${encodeURIComponent(meetingLink)}
+
+Thank you!
+        `,
       },
       userId
     );
@@ -166,13 +179,29 @@ const sendEmail = async ({ doctorEmail, userEmail, meetingLink }) => {
         to_email: doctorEmail, // Doctor's email
         doctor_email: doctorEmail,
         user_email: userEmail,
-        meeting_link: meetingLink,
-      },
-      userId
-    );
-    console.log("Doctor email response:", doctorResponse);
+        message: `
+        Hello Doctor,
 
-    return { patientResponse, doctorResponse };
+A patient has successfully booked an appointment. Here are the details:
+
+Meeting Link: ${meetingLink}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+
+Please use the above link to join the consultation at the scheduled time.
+
+
+Thank you!
+`,
+},
+userId
+);
+console.log("Doctor email response:", doctorResponse);
+
+// You can add this event to your calendar:
+// https://www.google.com/calendar/render?action=TEMPLATE&text=Doctor+Appointment&dates=${appointmentDate.replace(/-/g, '')}T${appointmentTime.split(' - ')[0].replace(':', '')}00Z/${appointmentDate.replace(/-/g, '')}T${appointmentTime.split(' - ')[1].replace(':', '')}00Z&details=Join+the+meeting+at:+${encodeURIComponent(meetingLink)}
+
+return { patientResponse, doctorResponse };
   } catch (error) {
     console.error("EmailJS error:", error);
     throw error;
