@@ -12,7 +12,7 @@ import {
   Menu,
 } from "lucide-react";
 import doctorImg from "../assets/doctor.jpg";
-import onlineMeet from "../assets/video-call.jpg";
+import onlineMeet from "../assets/video-call.jpeg";
 import { MdOutlineManageAccounts } from "react-icons/md";
 import { GiPsychicWaves,GiStrongMan } from "react-icons/gi";
 import { SiCodementor } from "react-icons/si";
@@ -21,7 +21,7 @@ import { FaChevronDown } from "react-icons/fa";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import testimonials from "../data";
+import { testimonials, reviews } from "../data";
 import UnderLine from "../assets/UnderLine.svg";
 
 const Home = () => {
@@ -213,7 +213,7 @@ const Home = () => {
           <img src={UnderLine} alt="Underline" className="w-32 md:w-48" />
         </div>
         <div>
-          <p className="text-lg text-gray-700 mb-4">Dr. Suhasini Geetha Barla is a highly qualified psychiatrist with an MBBS from Alluri Sitaram Raju Academy of Medical Sciences (2009) and a DPM from Guntur Medical College (2013). She has extensive experience in adult and geriatric psychiatry, and is known for her empathetic approach and evidence-based treatments. Dr. Barla has worked in both clinical and academic settings, and is passionate about mental health awareness, patient education, and holistic care. She regularly participates in mental health workshops and community outreach programs, and is dedicated to helping individuals achieve emotional well-being and resilience. Her areas of expertise include mood disorders, anxiety, dementia, and behavioral interventions.</p>
+          <p className="text-lg text-gray-700 mb-4">Dr. Suhasini Geetha Barla is a highly qualified psychiatrist with an MBBS from Alluri Sitaram Raju Academy of Medical Sciences (2009) and a DPM from Guntur Medical College (2013). She has extensive experience in adult and geriatric psychiatry, and is known for her empathetic approach and evidence-based treatments. Dr. Suhasini has worked in both clinical and academic settings, and is passionate about mental health awareness, patient education, and holistic care. She regularly participates in mental health workshops and community outreach programs, and is dedicated to helping individuals achieve emotional well-being and resilience. Her areas of expertise include mood disorders, anxiety, dementia, and behavioral interventions.</p>
         </div>
       </section>
 
@@ -264,7 +264,7 @@ const Home = () => {
           <div className="order-1 flex flex-col w-full md:w-1/2">
             <div className="w-full mb-8">
               <img src={onlineMeet} alt="onlineMeet" className="w-full mb-4 rounded-lg shadow-md" />
-              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.575086812845!2d78.5306644747761!3d17.3879201021469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcba3ff605e54d3%3A0x6b8f3a3a4c4e7c7a!2sChaitanyapuri%2C%20Hyderabad%2C%20Telangana%20500035%2C%20India!5e0!3m2!1sen!2sus!4v1718688461502!5m2!1sen!2sus" width="100%" height="300" allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="rounded-lg shadow-md"></iframe>
+              {/* <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.575086812845!2d78.5306644747761!3d17.3879201021469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcba3ff605e54d3%3A0x6b8f3a3a4c4e7c7a!2sChaitanyapuri%2C%20Hyderabad%2C%20Telangana%20500035%2C%20India!5e0!3m2!1sen!2sus!4v1718688461502!5m2!1sen!2sus" width="100%" height="300" allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="rounded-lg shadow-md"></iframe> */}
             </div>
             <div className="w-full">
               <Slider {...settings}>
@@ -285,7 +285,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h2 className="text-[18px] font-semibold text-[#011632]">Email</h2>
-                    <p className="text-[12px] text-[#3C4959] "><a href="mailto:Check@email.com" className="hover:underline">Check@email.com</a></p>
+                    <p className="text-[12px] text-[#3C4959] "><a href="mailto:barlasuhasini@gmail.com" className="hover:underline">barlasuhasini@gmail.com</a></p>
                   </div>
                 </div>
                 {/* Phone Number */}
@@ -295,7 +295,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h2 className="text-[18px] font-semibold text-[#011632]">Phone Number</h2>
-                    <p className="text-[12px] text-[#3C4959] "><a href="tel:0900-78601" className="hover:underline">0900-78601</a></p>
+                    <p className="text-[12px] text-[#3C4959] "><a href="tel:9618769203" className="hover:underline">9618769203</a></p>
                   </div>
                 </div>
                 {/* Message */}
@@ -305,7 +305,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h2 className="text-[18px] font-semibold text-[#011632]">Message</h2>
-                    <p className="text-[12px] text-[#3C4959] "><a href="https://wa.me/+12064512559" target="_blank" rel="noopener noreferrer" className="hover:underline">+1-2064512559</a></p>
+                    <p className="text-[12px] text-[#3C4959] "><a href="https://wa.me/9618769203" target="_blank" rel="noopener noreferrer" className="hover:underline">9618769203</a></p>
                   </div>
                 </div>
               </Slider>
@@ -398,28 +398,24 @@ const Home = () => {
       </section>
 
       {/* Patient Reviews Section with carousel */}
-      {/* <section className="py-6 px-4 max-w-4xl mx-auto mb-6">
-        <h2 className="text-xl font-bold text-[#011632]  text-center">Patient Reviews</h2>
+      <section id="reviews" className="py-6 px-4 max-w-4xl mx-auto mb-6">
+        <h2 className="text-xl md:text-3xl font-bold text-[#011632] text-center">Patient Reviews</h2>
         <div className="flex justify-center mb-8">
-          <img src={UnderLine} alt="Underline" className="w-32 md:w-48" />
+          <img src={UnderLine} alt="Underline" className="w-24 md:w-32" />
         </div>
-        <div className="bg-[#F8FAFC] rounded-lg p-6 shadow text-center">
+        <div className="bg-[#F8FAFC] rounded-lg p-4 shadow-md">
           <Slider {...settings}>
-            <div>
-              <p className="text-gray-700 italic mb-2">"Dr. Barla is very understanding and helped me manage my anxiety. Highly recommended!"</p>
-              <span className="font-semibold">- Priya S.</span>
-            </div>
-            <div>
-              <p className="text-gray-700 italic mb-2">"She listens patiently and provides practical solutions. I felt comfortable throughout my sessions."</p>
-              <span className="font-semibold">- Ramesh K.</span>
-            </div>
-            <div>
-              <p className="text-gray-700 italic mb-2">"Professional and empathetic. My family is grateful for her support during a tough time."</p>
-              <span className="font-semibold">- Anjali M.</span>
-            </div>
+            {reviews.map((review, index) => (
+              <div key={index} className="p-4 md:p-8 text-center">
+                <p className="text-lg md:text-xl text-gray-700 italic mb-4">"{review.feedback}"</p>
+                <h3 className="text-md md:text-lg font-semibold text-[#011632]">{review.name}</h3>
+                <p className="text-sm md:text-base text-gray-500 mt-1">{review.category}</p>
+                <a href={review.source} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 text-sm">View source</a>
+              </div>
+            ))}
           </Slider>
         </div>
-      </section> */}
+      </section>
 
       {/* News & Articles Section */}
       <section className="py-12 px-4 max-w-6xl mx-auto">

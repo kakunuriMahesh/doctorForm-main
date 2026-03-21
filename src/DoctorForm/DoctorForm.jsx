@@ -22,6 +22,7 @@ console.log("Env variables:", { clientId, clientSecret, refreshToken: initialRef
 const DoctorForm = () => {
   const localhost = "http://localhost:5001";
   const production = "https://doctor-backend-pay.onrender.com";
+  const commonPrice = 1; // Common price for all time slots
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -34,12 +35,14 @@ const DoctorForm = () => {
     couponCode: "",
   });
   const [availableSlots, setAvailableSlots] = useState([]);
+  // Commented out availableSlots as we're using fixed time slots now
+  // const [availableSlots, setAvailableSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [timer, setTimer] = useState(300);
   const [loadingStates, setLoadingStates] = useState({
-    fetchingSlots: false,
+    // fetchingSlots: false, // Commented out as not fetching slots anymore
     initiatingPayment: false,
     refreshingToken: false,
     submittingForm: false,
@@ -102,6 +105,8 @@ const DoctorForm = () => {
     }
   };
 
+  // Commented out fetchSlots function as we're using fixed time slots
+  /*
   const fetchSlots = async (date) => {
     setLoadingStates(prev => ({ ...prev, fetchingSlots: true }));
     try {
@@ -127,22 +132,24 @@ const DoctorForm = () => {
       setLoadingStates(prev => ({ ...prev, fetchingSlots: false }));
     }
   };
+  */
 
   const initiatePayment = async () => {
     setLoadingStates(prev => ({ ...prev, initiatingPayment: true }));
     try {
+      // Commented out slot selection as using fixed price
+      /*
       const selectedSlot = availableSlots.find(slot => slot.time === formData.appointmentTime);
       if (!selectedSlot) {
         toast.error("Please select a valid slot");
         return;
       }
-
+      */
       const response = await axios.post(`${production}/api/create-order`, {
         ...formData,
-        price: selectedSlot.price,
+        price: commonPrice,
       });
       setPaymentDetails(response.data);
-
       const options = {
         key: response.data.key,
         amount: response.data.amount,
@@ -157,47 +164,38 @@ const DoctorForm = () => {
                 ? tokenManager.accessToken
                 : await refreshAccessToken();
             const meetingLink = await generateMeetingLink(
-              formData.meetingType,
-              formData.meetingContact,
+              "Google Meet",
+              formData.email,
               formData.appointmentDate,
               formData.appointmentTime,
               accessToken
             );
-
-            if (meetingLink==="Error generating Google Meet link!") {
+            if (meetingLink === "Error generating Google Meet link!") {
               toast.error("Failed to generate meeting link");
               return;
             }
-
-            // Store the generated meeting link
             setGeneratedMeetingLink(meetingLink);
-
             const verifyResponse = await axios.post(`${production}/api/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               ...formData,
-              price: selectedSlot.price,
+              price: commonPrice,
               meetingLink,
             });
-
             if (verifyResponse.data.status === "success") {
-              // Store complete payment response for success modal
               setCompletePaymentResponse({
                 ...verifyResponse.data.appointment,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                amount: selectedSlot.price * 100, // Convert to paise for display
+                amount: commonPrice * 100,
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
               });
-              
               await handleFormSubmission(verifyResponse.data.appointment);
               setShowPaymentModal(false);
               toast.success("Payment and booking successful!");
-              
-              // Show success modal with all details
               setShowSuccessModal(true);
             } else {
               toast.error("Payment verification failed");
@@ -210,17 +208,17 @@ const DoctorForm = () => {
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
-          contact: formData.phone,
         },
         theme: { color: "#f97316" },
         modal: {
           ondismiss: () => {
             setShowPaymentModal(false);
             setTimer(300);
+            // Show contact support on payment failure or dismissal
+            toast.error("Payment was not completed. For support, please contact us at support@doctorform.com or call +91-1234567890");
           },
         },
       };
-
       const rzp = new window.Razorpay(options);
       rzp.open();
       setShowPaymentModal(true);
@@ -294,14 +292,17 @@ const DoctorForm = () => {
   const handleDateChange = async (e) => {
     const selectedDate = e.target.value;
     setFormData((prev) => ({ ...prev, appointmentDate: selectedDate, appointmentTime: "" }));
+    // Commented out slot fetching as using fixed slots
+    /*
     if (selectedDate) {
       await fetchSlots(selectedDate);
     } else {
       setAvailableSlots([]);
     }
+    */
     if (tokenManager.tokenExpiry < Date.now() || !tokenManager.accessToken) {
-      const newToken = await refreshAccessToken();
-      console.log("Refreshed token on date change:", newToken);
+      // const newToken = await refreshAccessToken(); // Commented out slot fetching as using fixed slots and not needing token for that
+      // console.log("Refreshed token on date change:", newToken);
     }
   };
 
@@ -322,7 +323,7 @@ const DoctorForm = () => {
       appointmentTime: "",
       couponCode: "",
     });
-    setAvailableSlots([]);
+    // setAvailableSlots([]); // Commented out as not using slots
     setPaymentDetails(null);
   };
 
@@ -422,8 +423,10 @@ const DoctorForm = () => {
               className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
             />
           </div>
+          <p className="text-xs text-gray-500 italic">Meeting Link will be sent to your email</p>
         </div>
 
+        {/* Commented out Preferred Meeting Type and Meeting Contact fields for future use
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Meeting Type</label>
           <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
@@ -440,7 +443,6 @@ const DoctorForm = () => {
             </select>
           </div>
         </div>
-
         {formData.meetingType && (
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address For Meet Link</label>
@@ -458,6 +460,7 @@ const DoctorForm = () => {
             </div>
           </div>
         )}
+        */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative">
@@ -477,37 +480,26 @@ const DoctorForm = () => {
             </div>
           </div>
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Available Slots</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Time</label>
             <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              {!loadingStates.fetchingSlots && <Clock className="w-5 h-5 text-gray-400 ml-3" />}
-              {loadingStates.fetchingSlots ? (
-                <div className="w-full flex items-center">
-                  <Loading size="small" text="Loading slots..." />
-                </div>
-              ) : (
-                <select
-                  name="appointmentTime"
-                  value={formData.appointmentTime}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
-                >
-                  <option value="">Select a slot</option>
-                  {availableSlots.length > 0 ? (
-                    availableSlots.map((slot, index) => (
-                      <option key={index} value={slot.time}>
-                        {slot.time} (₹{slot.price})
-                      </option>
-                    ))
-                  ) : (
-                    <option>No slots available</option>
-                  )}
-                </select>
-              )}
+              <Clock className="w-5 h-5 text-gray-400 ml-3" />
+              <select
+                name="appointmentTime"
+                value={formData.appointmentTime}
+                onChange={handleChange}
+                required
+                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
+              >
+                <option value="">Select a time slot</option>
+                <option value="Morning (9am-12pm)">Morning (9am-12pm) - ₹{commonPrice}</option>
+                <option value="Afternoon (2-4pm)">Afternoon (2-4pm) - ₹{commonPrice}</option>
+                <option value="Evening (6-8pm)">Evening (6-8pm) - ₹{commonPrice}</option>
+              </select>
             </div>
           </div>
         </div>
 
+        {/* Commented out Coupon Code field for future use
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code (Optional)</label>
           <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
@@ -521,6 +513,7 @@ const DoctorForm = () => {
             />
           </div>
         </div>
+        */}
 
         <button
           type="submit"
