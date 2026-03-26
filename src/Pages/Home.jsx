@@ -52,28 +52,59 @@ const Home = () => {
 
   // FAQ state for open/close
   const [openFAQ, setOpenFAQ] = useState(null);
-  const faqData = [
-    {
-      question: "What conditions does Dr. Suhasini Geetha Barla treat?",
-      answer:
-        "She treats a wide range of psychiatric conditions including depression, anxiety, dementia, and behavioral issues.",
-    },
-    {
-      question: "Do I need a referral to book an appointment?",
-      answer: "No, you can book an appointment directly without a referral.",
-    },
-    {
-      question: "Are online consultations available?",
-      answer:
-        "Yes, online consultations are available. Please use the Book Appointment button to schedule.",
-    },
-    {
-      question: "What is the clinic's approach to patient privacy?",
-      answer:
-        "Patient privacy and confidentiality are strictly maintained at all times.",
-    },
-  ];
+ const faqData = [
+  {
+    question: "What conditions does Dr. Suhasini Geetha Barla treat?",
+    answer:
+      "She treats a wide range of psychiatric conditions including depression, anxiety, dementia, and behavioral issues.",
+  },
+  {
+    question: "Do I need a referral to book an appointment?",
+    answer: "No, you can book an appointment directly without a referral.",
+  },
+  {
+    question: "Are online consultations available?",
+    answer:
+      "Yes, online consultations are available. Please use the Book Appointment button to schedule.",
+  },
+  {
+    question: "What is the clinic's approach to patient privacy?",
+    answer:
+      "Patient privacy and confidentiality are strictly maintained at all times.",
+  },
 
+  // ✅ Payment & Support FAQs
+  {
+    question: "What payment methods are accepted?",
+    answer:
+      "We accept secure online payments including UPI, debit cards, credit cards, and net banking.",
+  },
+  {
+    question: "My payment failed, but the amount was deducted. What should I do?",
+    answer:
+      "If your payment was deducted but the appointment was not booked, please wait for 5–10 minutes as it may take time to reflect. If the issue persists, contact our support team with your payment details. The amount will be refunded automatically within 5–7 working days if the booking is unsuccessful.",
+  },
+  {
+    question: "I completed the payment but did not receive appointment confirmation. What should I do?",
+    answer:
+      "Please check your email and spam folder for confirmation. If you still do not see it, contact our support team with your transaction ID for assistance.",
+  },
+  {
+    question: "How can I contact support for payment or booking issues?",
+    answer:
+      "You can contact our support team via email or WhatsApp. Details are available in the Contact/Support section of the app. Please share your transaction ID and registered details for faster resolution.",
+  },
+  {
+    question: "How long does it take to get a refund for failed transactions?",
+    answer:
+      "Refunds for failed or incomplete transactions are usually processed within 5–7 working days, depending on your bank or payment provider.",
+  },
+  {
+    question: "Can I retry booking if my payment fails?",
+    answer:
+      "Yes, you can try booking again after a failed payment. Ensure that the previous transaction status is checked before retrying to avoid duplicate charges.",
+  },
+];
   React.useEffect(() => {
     let lastScroll = window.scrollY;
 
@@ -490,43 +521,83 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-[#E6F6FE] py-10 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><a href="#home" className="text-[#011632] transition hover:text-blue-500">Home</a></li>
-              <li><a href="#about" className="text-[#011632] transition hover:text-blue-500">About</a></li>
-              <li><a href="#services" className="text-[#011632] transition hover:text-blue-500">Services</a></li>
-              <li><a href="#stories" className="text-[#011632] transition hover:text-blue-500">Stories</a></li>
-              <li><a href="#contact" className="text-[#011632] transition hover:text-blue-500">Contact</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
-            <p className="flex justify-center md:justify-start items-center space-x-2 mb-2"><MapPin size={20} /><span>Shop Number F - 21, Sreeman Rama Complex, Hyderabad</span></p>
-            <p className="mb-2">Email: <a href="mailto:care@dr-Suhasini.com" className="hover:underline">care@dr-Suhasini.com</a></p>
-            <p>Phone: <a href="tel:+915551234567" className="hover:underline">(555) 123-4567</a></p>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Follow Us</h3>
-            <div className="flex justify-center md:justify-start space-x-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook size={24} className="text-[#011632] transition hover:text-blue-600" /></a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter size={24} className="text-[#011632] transition hover:text-blue-400" /></a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram size={24} className="text-[#011632] transition hover:text-pink-500" /></a>
-            </div>
+    <footer id="contact" className="bg-[#E6F6FE] py-10 px-4">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+        
+        {/* Quick Links */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
+          <ul className="space-y-2">
+            <li><a href="#home" className="text-[#011632] transition hover:text-blue-500">Home</a></li>
+            <li><a href="#about" className="text-[#011632] transition hover:text-blue-500">About</a></li>
+            <li><a href="#services" className="text-[#011632] transition hover:text-blue-500">Services</a></li>
+            <li><a href="#stories" className="text-[#011632] transition hover:text-blue-500">Stories</a></li>
+            <li><a href="#contact" className="text-[#011632] transition hover:text-blue-500">Contact</a></li>
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
+          <p className="flex justify-center md:justify-start items-center space-x-2 mb-2">
+            <MapPin size={20} />
+            <span>Shop Number F - 21, Sreeman Rama Complex, Hyderabad</span>
+          </p>
+          <p className="mb-2">
+            Email: <a href="mailto:care@dr-Suhasini.com" className="hover:underline">care@dr-Suhasini.com</a>
+          </p>
+          <p>
+            Phone: <a href="tel:+915551234567" className="hover:underline">(555) 123-4567</a>
+          </p>
+        </div>
+
+        {/* Support Section ✅ NEW */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Support</h3>
+          <p className="mb-2">
+            Email: <a href="mailto:support@dr-Suhasini.com" className="hover:underline">support@dr-Suhasini.com</a>
+          </p>
+          <p className="mb-2">
+            Phone: <a href="tel:+919998889512" className="hover:underline">+91 9998889512</a>
+          </p>
+          <p className="text-sm text-gray-600">
+            For payment issues, refunds, or booking support, please contact us with your transaction ID.
+          </p>
+        </div>
+
+        {/* Social */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Follow Us</h3>
+          <div className="flex justify-center md:justify-start space-x-4">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <Facebook size={24} className="text-[#011632] transition hover:text-blue-600" />
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+              <Twitter size={24} className="text-[#011632] transition hover:text-blue-400" />
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <Instagram size={24} className="text-[#011632] transition hover:text-pink-500" />
+            </a>
           </div>
         </div>
-        <div className="text-center mt-8 text-sm">
-          <p>© 2025 Dr. Suhasini. All rights reserved. Designed by <a href="https://srcdesigns.in" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500">srcdesigns</a></p>
-          <div className="flex justify-center md:justify-center space-x-4 mt-4">  
-            <a href="/privacy-policy" className="text-[#011632] transition hover:text-blue-500">Privacy Policy</a>
-                <a href="/terms-and-conditions" className="text-[#011632] transition hover:text-blue-500">Terms and Conditions</a>
-                <a href="/cancellation-and-refund" className="text-[#011632] transition hover:text-blue-500">Cancellation and Refund</a>
-                <a href="/shipping-and-delivery" className="text-[#011632] transition hover:text-blue-500">Shipping and Delivery</a>
-          </div>
+
+      </div>
+
+      <div className="text-center mt-8 text-sm">
+        <p>
+          © 2025 Dr. Suhasini. All rights reserved. Designed by{" "}
+          <a href="https://srcdesigns.in" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500">
+            srcdesigns
+          </a>
+        </p>
+        <div className="flex justify-center space-x-4 mt-4">  
+          <a href="/privacy-policy" className="text-[#011632] transition hover:text-blue-500">Privacy Policy</a>
+          <a href="/terms-and-conditions" className="text-[#011632] transition hover:text-blue-500">Terms and Conditions</a>
+          <a href="/cancellation-and-refund" className="text-[#011632] transition hover:text-blue-500">Cancellation and Refund</a>
+          <a href="/shipping-and-delivery" className="text-[#011632] transition hover:text-blue-500">Shipping and Delivery</a>
         </div>
-      </footer>
+      </div>
+    </footer>
     </div>
   );
 };

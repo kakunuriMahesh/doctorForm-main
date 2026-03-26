@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import { generateMeetingLink } from "./generateMeetingLink ";
+import { generateMeetingLink, sendConfirmationEmail } from "./generateMeetingLink ";
 import { User, Phone, Mail, Calendar, Clock, MessageSquare } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -22,7 +22,7 @@ console.log("Env variables:", { clientId, clientSecret, refreshToken: initialRef
 const DoctorForm = () => {
   const localhost = "http://localhost:5001";
   const production = "https://doctor-backend-pay.onrender.com";
-  const commonPrice = 1; // Common price for all time slots
+  const commonPrice = 800; // Common price for all time slots
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -47,9 +47,11 @@ const DoctorForm = () => {
     refreshingToken: false,
     submittingForm: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [generatedMeetingLink, setGeneratedMeetingLink] = useState("");
   const [completePaymentResponse, setCompletePaymentResponse] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(""); // Track payment status as a string
   const [tokenManager, setTokenManager] = useState({
     accessToken: localStorage.getItem("accessToken") || null,
     tokenExpiry: localStorage.getItem("tokenExpiry") || 0,
@@ -159,29 +161,32 @@ const DoctorForm = () => {
         order_id: response.data.orderId,
         handler: async function (response) {
           try {
-            const accessToken =
-              tokenManager.tokenExpiry > Date.now()
-                ? tokenManager.accessToken
-                : await refreshAccessToken();
-            const meetingLink = await generateMeetingLink(
-              "Google Meet",
-              formData.email,
-              formData.appointmentDate,
-              formData.appointmentTime,
-              accessToken
-            );
-            if (meetingLink === "Error generating Google Meet link!") {
-              toast.error("Failed to generate meeting link");
-              return;
-            }
-            setGeneratedMeetingLink(meetingLink);
+            // const accessToken =
+            //   tokenManager.tokenExpiry > Date.now()
+            //     ? tokenManager.accessToken
+            //     : await refreshAccessToken();
+            // const meetingLink = await generateMeetingLink(
+            //   "Google Meet",
+            //   formData.email,
+            //   formData.appointmentDate,
+            //   formData.appointmentTime,
+            //   accessToken
+            // );
+            // if (meetingLink === "Error generating Google Meet link!") {
+            //   toast.error("Failed to generate meeting link");
+            //   return;
+            // }
+            // setGeneratedMeetingLink(meetingLink);
+            // Send empty meeting link directly instead of generating one
+            setGeneratedMeetingLink("");
             const verifyResponse = await axios.post(`${production}/api/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               ...formData,
               price: commonPrice,
-              meetingLink,
+              // meetingLink,
+              meetingLink: "",
             });
             if (verifyResponse.data.status === "success") {
               setCompletePaymentResponse({
@@ -193,16 +198,25 @@ const DoctorForm = () => {
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
               });
-              await handleFormSubmission(verifyResponse.data.appointment);
+              setPaymentStatus(prev => prev + ", success");
+
+              // Send confirmation email directly
+              await sendConfirmationEmail(formData);
+
+              await handleFormSubmission("success", verifyResponse.data.appointment);
               setShowPaymentModal(false);
               toast.success("Payment and booking successful!");
               setShowSuccessModal(true);
             } else {
+              setPaymentStatus(prev => prev + ", failed");
               toast.error("Payment verification failed");
+              await handleFormSubmission("failed");
             }
           } catch (error) {
+            setPaymentStatus(prev => prev + ", failed");
             toast.error("Error verifying payment");
             console.error("Payment verification error:", error);
+            await handleFormSubmission("failed");
           }
         },
         prefill: {
@@ -212,10 +226,12 @@ const DoctorForm = () => {
         theme: { color: "#f97316" },
         modal: {
           ondismiss: () => {
+            setPaymentStatus(prev => prev + ", came back");
             setShowPaymentModal(false);
             setTimer(300);
             // Show contact support on payment failure or dismissal
             toast.error("Payment was not completed. For support, please contact us at support@doctorform.com or call +91-1234567890");
+            handleFormSubmission("failed");
           },
         },
       };
@@ -230,6 +246,8 @@ const DoctorForm = () => {
     }
   };
 
+  // Commented out the previous handleFormSubmission function
+  /*
   const handleFormSubmission = async (paymentResponse = {}) => {
     setLoadingStates(prev => ({ ...prev, submittingForm: true }));
     try {
@@ -274,9 +292,135 @@ const DoctorForm = () => {
       setLoadingStates(prev => ({ ...prev, submittingForm: false }));
     }
   };
+  */
+
+  // New handleFormSubmission function to handle both success and failure
+  // const handleFormSubmission = async (status, paymentResponse = {}) => {
+  //   if (isSubmitting) return; // Prevent multiple submissions
+  //   setIsSubmitting(true);
+  //   setLoadingStates(prev => ({ ...prev, submittingForm: true }));
+  //   try {
+  //     console.log(`Starting form submission with status: ${status}, paymentResponse:`, paymentResponse);
+
+  //     const scriptURL =
+  //       // "https://script.google.com/macros/s/AKfycbzdRH5xhnEylRsMQD6gu3gFfN03SIrj272Hu6vsR1MOOd2XCP0KkgomNccJKq7VNe2-HA/exec";
+  //       "https://script.google.com/macros/s/AKfycbx1M2oQtptw8EoJJvf3voGDgrIATUHDBQzW91lMzpERUGEAbzT9fKuZ5y9t3qHxy6zcsw/exec"
+  //     const formDataToSubmit = new FormData();
+  //     Object.keys(formData).forEach((key) => formDataToSubmit.append(key, formData[key]));
+  //     formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
+  //     formDataToSubmit.append("paymentId", paymentResponse.paymentId || "");
+  //     formDataToSubmit.append("orderId", paymentResponse.orderId || "");
+  //     formDataToSubmit.append("appointmentStatus", status); // Add status: "success" or "failed"
+  //     // Always append payment details, even if null
+  //     formDataToSubmit.append("amount", paymentDetails?.amount || "");
+  //     formDataToSubmit.append("amountInINR", paymentDetails?.amountInINR || "");
+  //     formDataToSubmit.append("currency", paymentDetails?.currency || "");
+  //     formDataToSubmit.append("paymentStatus", paymentStatus); // Use the accumulated status string
+  //     formDataToSubmit.append("price", paymentDetails?.price || "");
+
+  //     console.log("Submitting to Google Sheet with data:", Object.fromEntries(formDataToSubmit));
+
+  //     const response = await fetch(scriptURL, { method: "POST", body: formDataToSubmit });
+  //     console.log("Google Sheet response status:", response.status, response.ok);
+  //     const responseText = await response.text();
+  //     console.log("Google Sheet response text:", responseText);
+
+  //     if (response.ok) {
+  //       if (status === "success") {
+  //         toast.success("Appointment successfully booked!");
+  //         // Don't reset form data here as we need it for the success modal
+  //         // The form will be reset when the success modal is closed
+  //       } else {
+  //         toast.error("Appointment booking failed. Please contact support.");
+  //       }
+  //     } else {
+  //       throw new Error("Failed to submit to Google Sheet");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Error processing submission");
+  //     console.error("Submission error:", error);
+  //   } finally {
+  //     setLoadingStates(prev => ({ ...prev, submittingForm: false }));
+  //     setIsSubmitting(false);
+  //   }
+  // };
+  const handleFormSubmission = async (status, paymentResponse = {}) => {
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+  setLoadingStates(prev => ({ ...prev, submittingForm: true }));
+
+  try {
+    console.log(`Submitting with status: ${status}`);
+
+    // const scriptURL = "https://script.google.com/macros/s/AKfycbx1M2oQtptw8EoJJvf3voGDgrIATUHDBQzW91lMzpERUGEAbzT9fKuZ5y9t3qHxy6zcsw/exec";
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzwOaGYr3MQ2hqYBESvpcbiDvo2bFbKNYyi4fiVOuUxN1EUGqWTvddTnjLe0ftDj5bOBA/exec'
+
+    const formDataToSubmit = new FormData();
+
+    // Core form fields
+    Object.keys(formData).forEach((key) => {
+      formDataToSubmit.append(key, formData[key] || "");
+    });
+
+    // Payment & appointment related fields
+    formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
+    formDataToSubmit.append("paymentId", paymentResponse.paymentId || paymentResponse.razorpay_payment_id || "");
+    formDataToSubmit.append("orderId", paymentResponse.orderId || paymentResponse.razorpay_order_id || "");
+    formDataToSubmit.append("appointmentStatus", status); // "success" or "failed"
+
+    // Payment gateway details (even if payment didn't happen)
+    formDataToSubmit.append("amount", paymentDetails?.amount || "");
+    formDataToSubmit.append("amountInINR", paymentDetails?.amountInINR || "");
+    formDataToSubmit.append("currency", paymentDetails?.currency || "INR");
+    formDataToSubmit.append("price", paymentDetails?.price || commonPrice.toString());
+
+    // ── Final payment status ──
+    let finalPaymentStatus = "not attempted";
+
+    if (status === "success") {
+      finalPaymentStatus = "success";
+    } else if (paymentStatus.includes("came back")) {
+      finalPaymentStatus = "user cancelled / came back";
+    } else if (paymentStatus.includes("failed")) {
+      finalPaymentStatus = "failed";
+    } else if (paymentStatus.includes("entered details")) {
+      finalPaymentStatus = "initiated but incomplete";
+    }
+
+    formDataToSubmit.append("paymentStatus", finalPaymentStatus);
+
+    console.log("Submitting to Google Sheet:", Object.fromEntries(formDataToSubmit));
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      body: formDataToSubmit,
+    });
+
+    const responseText = await response.text();
+    console.log("Google Apps Script response:", response.status, responseText);
+
+    if (response.ok) {
+      if (status === "success") {
+        toast.success("Appointment successfully booked!");
+        setShowSuccessModal(true);
+      } else {
+        toast.error("Booking could not be completed. Please try again or contact support.");
+      }
+    } else {
+      throw new Error(`Google Sheet submission failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Submission error:", error);
+    toast.error("Error saving appointment data");
+  } finally {
+    setLoadingStates(prev => ({ ...prev, submittingForm: false }));
+    setIsSubmitting(false);
+  }
+};
 
   const handleBookAppointment = (e) => {
     e.preventDefault();
+    setPaymentStatus("entered details");
     initiatePayment();
   };
 
@@ -310,6 +454,8 @@ const DoctorForm = () => {
     setShowSuccessModal(false);
     setGeneratedMeetingLink("");
     setCompletePaymentResponse(null);
+    setPaymentStatus(""); // Reset payment status
+    setIsSubmitting(false); // Reset submitting flag
     
     // Reset form data after showing success modal
     setFormData({
@@ -395,6 +541,7 @@ const DoctorForm = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
           <PhoneInput
             country={"in"}
+            countryCodeEditable={false}
             value={formData.phone}
             onChange={handlePhoneChange}
             inputProps={{ name: "phone", required: true }}

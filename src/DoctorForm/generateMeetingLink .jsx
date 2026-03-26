@@ -212,8 +212,75 @@ const sendWhatsAppMessage = async ({ doctorPhone, patientPhone, meetingLink }) =
   console.log("Sending WhatsApp:", { doctorPhone, patientPhone, meetingLink });
 };
 
-export { generateMeetingLink };
+const sendConfirmationEmail = async (patientDetails) => {
+  const { firstName, lastName, email, phone, appointmentDate, appointmentTime } = patientDetails;
+  
+  try {
+    console.log("Sending confirmation emails for:", patientDetails);
 
+    // Send email to the patient
+    const patientResponse = await emailjs.send(
+      serviceId,
+      templateId,
+      {
+        to_email: email, 
+        doctor_email: doctorEmail,
+        user_email: email,
+        message: `
+Hello ${firstName} ${lastName || ""},
+
+Your appointment is confirmed!
+
+Here are your booking details:
+Name: ${firstName} ${lastName || ""}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+
+Our team will contact you shortly with further details about your consultation.
+
+Thank you!
+        `,
+      },
+      userId
+    );
+    console.log("Patient confirmation email response:", patientResponse);
+
+    // Send email to the doctor
+    const doctorResponse = await emailjs.send(
+      serviceId,
+      templateId,
+      {
+        to_email: doctorEmail,
+        doctor_email: doctorEmail,
+        user_email: email,
+        message: `
+Hello Doctor,
+
+A new patient has successfully booked an appointment. Here are the details:
+
+Name: ${firstName} ${lastName || ""}
+Email: ${email}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+
+Thank you!
+        `,
+      },
+      userId
+    );
+    console.log("Doctor confirmation email response:", doctorResponse);
+
+    return { patientResponse, doctorResponse };
+  } catch (error) {
+    console.error("EmailJS Error sending confirmation emails:", error);
+    // Don't throw, just log so it doesn't break the booking flow if email fails
+    return { error };
+  }
+};
+
+export { generateMeetingLink, sendConfirmationEmail };
 // TODO: getting error while generating meetinglink because of date format
 
 
