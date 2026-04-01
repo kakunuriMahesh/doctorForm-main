@@ -213,10 +213,105 @@ const sendWhatsAppMessage = async ({ doctorPhone, patientPhone, meetingLink }) =
 };
 
 const sendConfirmationEmail = async (patientDetails) => {
-  const { firstName, lastName, email, phone, appointmentDate, appointmentTime } = patientDetails;
+  const { firstName, lastName, email, phone, appointmentDate, appointmentTime, bookingMode, serviceType } = patientDetails;
   
+  const isOffline = bookingMode === "offline";
+  const clinicAddress = "Shop Number F - 21, Sreeman Rama Complex, Hyderabad";
+  const consultationType = isOffline ? "Offline Consultation - Asha Neuro Clinic" : "Online Consultation";
+
   try {
     console.log("Sending confirmation emails for:", patientDetails);
+
+    // Build patient email message based on booking mode
+    const patientMessage = isOffline
+      ? `
+Hello ${firstName} ${lastName || ""},
+
+Your offline appointment at Asha Neuro Clinic is confirmed!
+
+Here are your booking details:
+━━━━━━━━━━━━━━━━━━━━━━━
+Consultation Type: ${consultationType}
+Service: ${serviceType || "N/A"}
+Name: ${firstName} ${lastName || ""}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Clinic Address:
+Asha Neuro Clinic
+${clinicAddress}
+
+Please arrive 10 minutes before your scheduled time.
+No payment is required at the time of booking.
+
+If you need to reschedule, please contact us in advance.
+
+Thank you!
+      `
+      : `
+Hello ${firstName} ${lastName || ""},
+
+Your online consultation is confirmed!
+
+Here are your booking details:
+━━━━━━━━━━━━━━━━━━━━━━━
+Consultation Type: ${consultationType}
+Service: ${serviceType || "N/A"}
+Name: ${firstName} ${lastName || ""}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Our team will share the meeting link to your email before the scheduled time.
+Each session duration is 45 minutes.
+
+If you need to reschedule, please contact us in advance.
+
+Thank you!
+      `;
+
+    // Build doctor email message
+    const doctorMessage = isOffline
+      ? `
+Hello Doctor,
+
+A new patient has booked an offline appointment at Asha Neuro Clinic.
+
+Patient Details:
+━━━━━━━━━━━━━━━━━━━━━━━
+Consultation Type: ${consultationType}
+Service: ${serviceType || "N/A"}
+Name: ${firstName} ${lastName || ""}
+Email: ${email}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+Payment: No payment (Offline consultation)
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Thank you!
+      `
+      : `
+Hello Doctor,
+
+A new patient has successfully booked an online consultation.
+
+Patient Details:
+━━━━━━━━━━━━━━━━━━━━━━━
+Consultation Type: ${consultationType}
+Service: ${serviceType || "N/A"}
+Name: ${firstName} ${lastName || ""}
+Email: ${email}
+Phone: ${phone}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Thank you!
+      `;
 
     // Send email to the patient
     const patientResponse = await emailjs.send(
@@ -226,21 +321,7 @@ const sendConfirmationEmail = async (patientDetails) => {
         to_email: email, 
         doctor_email: doctorEmail,
         user_email: email,
-        message: `
-Hello ${firstName} ${lastName || ""},
-
-Your appointment is confirmed!
-
-Here are your booking details:
-Name: ${firstName} ${lastName || ""}
-Phone: ${phone}
-Date: ${appointmentDate}
-Time: ${appointmentTime}
-
-Our team will contact you shortly with further details about your consultation.
-
-Thank you!
-        `,
+        message: patientMessage,
       },
       userId
     );
@@ -254,19 +335,7 @@ Thank you!
         to_email: doctorEmail,
         doctor_email: doctorEmail,
         user_email: email,
-        message: `
-Hello Doctor,
-
-A new patient has successfully booked an appointment. Here are the details:
-
-Name: ${firstName} ${lastName || ""}
-Email: ${email}
-Phone: ${phone}
-Date: ${appointmentDate}
-Time: ${appointmentTime}
-
-Thank you!
-        `,
+        message: doctorMessage,
       },
       userId
     );

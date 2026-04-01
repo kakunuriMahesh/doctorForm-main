@@ -3,7 +3,7 @@ import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 import { generateMeetingLink, sendConfirmationEmail } from "./generateMeetingLink ";
-import { User, Phone, Mail, Calendar, Clock, MessageSquare } from "lucide-react";
+import { User, Phone, Mail, Calendar, Clock, MessageSquare, MapPin, Info, Stethoscope, Building2 } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import UnderLine from "../assets/UnderLine.svg";
@@ -19,10 +19,18 @@ const {
 
 console.log("Env variables:", { clientId, clientSecret, refreshToken: initialRefreshToken });
 
+// Service types with pricing
+const SERVICE_TYPES = [
+  { label: "General Counselling", price: 2000 },
+  { label: "Cognitive Behaviour Therapy (CBT)", price: 2000 },
+  { label: "Dialectical Behaviour Therapy (DBT)", price: 2000 },
+  { label: "Marital or Couples Therapy", price: 3000 },
+];
+
 const DoctorForm = () => {
   const localhost = "http://localhost:5001";
   const production = "https://doctor-backend-pay.onrender.com";
-  const commonPrice = 800; // Common price for all time slots
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -33,25 +41,26 @@ const DoctorForm = () => {
     appointmentDate: "",
     appointmentTime: "",
     couponCode: "",
+    bookingMode: "online", // "online" or "offline"
+    serviceType: "",
   });
+
+  const [selectedServicePrice, setSelectedServicePrice] = useState(0);
   const [availableSlots, setAvailableSlots] = useState([]);
-  // Commented out availableSlots as we're using fixed time slots now
-  // const [availableSlots, setAvailableSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [timer, setTimer] = useState(300);
   const [loadingStates, setLoadingStates] = useState({
-    // fetchingSlots: false, // Commented out as not fetching slots anymore
     initiatingPayment: false,
     refreshingToken: false,
     submittingForm: false,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [generatedMeetingLink, setGeneratedMeetingLink] = useState("");
   const [completePaymentResponse, setCompletePaymentResponse] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState(""); // Track payment status as a string
+  const [paymentStatus, setPaymentStatus] = useState("");
   const [tokenManager, setTokenManager] = useState({
     accessToken: localStorage.getItem("accessToken") || null,
     tokenExpiry: localStorage.getItem("tokenExpiry") || 0,
@@ -107,49 +116,12 @@ const DoctorForm = () => {
     }
   };
 
-  // Commented out fetchSlots function as we're using fixed time slots
-  /*
-  const fetchSlots = async (date) => {
-    setLoadingStates(prev => ({ ...prev, fetchingSlots: true }));
-    try {
-      console.log(`Fetching slots for ${date}`);
-      const res = await axios.get(`${production}/api/slots/${date}`);
-      console.log("Slots response:", res.data);
-      if (Array.isArray(res.data)) {
-        setAvailableSlots(res.data);
-      } else {
-        console.warn("Unexpected response format:", res.data);
-        setAvailableSlots([]);
-        toast.error("No slots available for this date");
-      }
-    } catch (error) {
-      console.error("Error fetching slots:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
-      toast.error(error.response?.data?.error || "Error fetching slots");
-      setAvailableSlots([]);
-    } finally {
-      setLoadingStates(prev => ({ ...prev, fetchingSlots: false }));
-    }
-  };
-  */
-
   const initiatePayment = async () => {
     setLoadingStates(prev => ({ ...prev, initiatingPayment: true }));
     try {
-      // Commented out slot selection as using fixed price
-      /*
-      const selectedSlot = availableSlots.find(slot => slot.time === formData.appointmentTime);
-      if (!selectedSlot) {
-        toast.error("Please select a valid slot");
-        return;
-      }
-      */
-      const response = await axios.post(`${production}/api/create-order`, {
+      const response = await axios.post(`${localhost}/api/create-order`, {
         ...formData,
-        price: commonPrice,
+        price: selectedServicePrice,
       });
       setPaymentDetails(response.data);
       const options = {
@@ -157,35 +129,17 @@ const DoctorForm = () => {
         amount: response.data.amount,
         currency: "INR",
         name: "Doctor Consultation",
-        description: "Appointment Booking",
+        description: `${formData.serviceType} - Appointment Booking`,
         order_id: response.data.orderId,
         handler: async function (response) {
           try {
-            // const accessToken =
-            //   tokenManager.tokenExpiry > Date.now()
-            //     ? tokenManager.accessToken
-            //     : await refreshAccessToken();
-            // const meetingLink = await generateMeetingLink(
-            //   "Google Meet",
-            //   formData.email,
-            //   formData.appointmentDate,
-            //   formData.appointmentTime,
-            //   accessToken
-            // );
-            // if (meetingLink === "Error generating Google Meet link!") {
-            //   toast.error("Failed to generate meeting link");
-            //   return;
-            // }
-            // setGeneratedMeetingLink(meetingLink);
-            // Send empty meeting link directly instead of generating one
             setGeneratedMeetingLink("");
-            const verifyResponse = await axios.post(`${production}/api/verify-payment`, {
+            const verifyResponse = await axios.post(`${localhost}/api/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               ...formData,
-              price: commonPrice,
-              // meetingLink,
+              price: selectedServicePrice,
               meetingLink: "",
             });
             if (verifyResponse.data.status === "success") {
@@ -194,7 +148,7 @@ const DoctorForm = () => {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                amount: commonPrice * 100,
+                amount: selectedServicePrice * 100,
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
               });
@@ -229,7 +183,6 @@ const DoctorForm = () => {
             setPaymentStatus(prev => prev + ", came back");
             setShowPaymentModal(false);
             setTimer(300);
-            // Show contact support on payment failure or dismissal
             toast.error("Payment was not completed. For support, please contact us at support@doctorform.com or call +91-1234567890");
             handleFormSubmission("failed");
           },
@@ -246,187 +199,142 @@ const DoctorForm = () => {
     }
   };
 
-  // Commented out the previous handleFormSubmission function
-  /*
-  const handleFormSubmission = async (paymentResponse = {}) => {
+  const handleFormSubmission = async (status, paymentResponse = {}) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setLoadingStates(prev => ({ ...prev, submittingForm: true }));
+
     try {
-      console.log("Starting form submission with paymentResponse:", paymentResponse);
+      console.log(`Submitting with status: ${status}`);
 
-      const scriptURL =
-        "https://script.google.com/macros/s/AKfycbzdRH5xhnEylRsMQD6gu3gFfN03SIrj272Hu6vsR1MOOd2XCP0KkgomNccJKq7VNe2-HA/exec";
+      const scriptURL = 'https://script.google.com/macros/s/AKfycbzwOaGYr3MQ2hqYBESvpcbiDvo2bFbKNYyi4fiVOuUxN1EUGqWTvddTnjLe0ftDj5bOBA/exec';
+
       const formDataToSubmit = new FormData();
-      Object.keys(formData).forEach((key) => formDataToSubmit.append(key, formData[key]));
-      formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
-      formDataToSubmit.append("paymentId", paymentResponse.paymentId || "");
-      formDataToSubmit.append("orderId", paymentResponse.orderId || "");
-      if (paymentDetails) {
-        formDataToSubmit.append("amount", paymentDetails.amount || "");
-        formDataToSubmit.append("amountInINR", paymentDetails.amountInINR || "");
-        formDataToSubmit.append("currency", paymentDetails.currency || "");
-        formDataToSubmit.append("paymentStatus", "success");
-        formDataToSubmit.append("price", paymentDetails.price || "");
-      }
 
-      console.log("Submitting to Google Sheet with data:", Object.fromEntries(formDataToSubmit));
-
-      const response = await fetch(scriptURL, { method: "POST", body: formDataToSubmit });
-      console.log("Google Sheet response status:", response.status, response.ok);
-
-      console.log("Payment Details after success:", {
-        storedPaymentDetails: paymentDetails,
-        razorpayResponse: paymentResponse,
+      // Core form fields
+      Object.keys(formData).forEach((key) => {
+        formDataToSubmit.append(key, formData[key] || "");
       });
 
-      if (response.ok) {
-        toast.success("Appointment successfully booked!");
-        // Don't reset form data here as we need it for the success modal
-        // The form will be reset when the success modal is closed
+      // Payment & appointment related fields
+      formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
+      formDataToSubmit.append("paymentId", paymentResponse.paymentId || paymentResponse.razorpay_payment_id || "");
+      formDataToSubmit.append("orderId", paymentResponse.orderId || paymentResponse.razorpay_order_id || "");
+      formDataToSubmit.append("appointmentStatus", status);
+
+      // Payment gateway details
+      if (formData.bookingMode === "online") {
+        formDataToSubmit.append("amount", paymentDetails?.amount || "");
+        formDataToSubmit.append("amountInINR", paymentDetails?.amountInINR || "");
+        formDataToSubmit.append("currency", paymentDetails?.currency || "INR");
+        formDataToSubmit.append("price", paymentDetails?.price || selectedServicePrice.toString());
       } else {
-        throw new Error("Failed to submit to Google Sheet");
+        // Offline booking - no payment
+        formDataToSubmit.append("amount", "");
+        formDataToSubmit.append("amountInINR", "");
+        formDataToSubmit.append("currency", "");
+        formDataToSubmit.append("price", "0");
+      }
+
+      // Final payment status
+      let finalPaymentStatus = "not attempted";
+      if (formData.bookingMode === "offline") {
+        finalPaymentStatus = "N/A - Offline Consultation";
+      } else if (status === "success") {
+        finalPaymentStatus = "success";
+      } else if (paymentStatus.includes("came back")) {
+        finalPaymentStatus = "user cancelled / came back";
+      } else if (paymentStatus.includes("failed")) {
+        finalPaymentStatus = "failed";
+      } else if (paymentStatus.includes("entered details")) {
+        finalPaymentStatus = "initiated but incomplete";
+      }
+
+      formDataToSubmit.append("paymentStatus", finalPaymentStatus);
+
+      console.log("Submitting to Google Sheet:", Object.fromEntries(formDataToSubmit));
+
+      const response = await fetch(scriptURL, {
+        method: "POST",
+        body: formDataToSubmit,
+      });
+
+      const responseText = await response.text();
+      console.log("Google Apps Script response:", response.status, responseText);
+
+      if (response.ok) {
+        if (status === "success") {
+          toast.success("Appointment successfully booked!");
+          setShowSuccessModal(true);
+        } else {
+          toast.error("Booking could not be completed. Please try again or contact support.");
+        }
+      } else {
+        throw new Error(`Google Sheet submission failed: ${response.status}`);
       }
     } catch (error) {
-      toast.error("Error processing submission");
       console.error("Submission error:", error);
+      toast.error("Error saving appointment data");
+    } finally {
+      setLoadingStates(prev => ({ ...prev, submittingForm: false }));
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle online booking (with payment)
+  const handleBookAppointment = (e) => {
+    e.preventDefault();
+
+    if (formData.bookingMode === "offline") {
+      handleBookOffline();
+      return;
+    }
+
+    setPaymentStatus("entered details");
+    initiatePayment();
+  };
+
+  // Handle offline booking (no payment)
+  const handleBookOffline = async () => {
+    setLoadingStates(prev => ({ ...prev, submittingForm: true }));
+    try {
+      // Save offline appointment to database
+      const dbResponse = await axios.post(`${localhost}/api/book-offline`, {
+        ...formData
+      });
+      console.log('Offline DB response:', dbResponse.data);
+
+      // Send confirmation emails
+      await sendConfirmationEmail(formData);
+
+      // Submit to Google Sheet
+      await handleFormSubmission("success", dbResponse.data.appointment || {});
+
+      toast.success("Offline appointment booked successfully!");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Offline booking error:", error);
+      toast.error("Error booking offline appointment. Please try again.");
     } finally {
       setLoadingStates(prev => ({ ...prev, submittingForm: false }));
     }
-  };
-  */
-
-  // New handleFormSubmission function to handle both success and failure
-  // const handleFormSubmission = async (status, paymentResponse = {}) => {
-  //   if (isSubmitting) return; // Prevent multiple submissions
-  //   setIsSubmitting(true);
-  //   setLoadingStates(prev => ({ ...prev, submittingForm: true }));
-  //   try {
-  //     console.log(`Starting form submission with status: ${status}, paymentResponse:`, paymentResponse);
-
-  //     const scriptURL =
-  //       // "https://script.google.com/macros/s/AKfycbzdRH5xhnEylRsMQD6gu3gFfN03SIrj272Hu6vsR1MOOd2XCP0KkgomNccJKq7VNe2-HA/exec";
-  //       "https://script.google.com/macros/s/AKfycbx1M2oQtptw8EoJJvf3voGDgrIATUHDBQzW91lMzpERUGEAbzT9fKuZ5y9t3qHxy6zcsw/exec"
-  //     const formDataToSubmit = new FormData();
-  //     Object.keys(formData).forEach((key) => formDataToSubmit.append(key, formData[key]));
-  //     formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
-  //     formDataToSubmit.append("paymentId", paymentResponse.paymentId || "");
-  //     formDataToSubmit.append("orderId", paymentResponse.orderId || "");
-  //     formDataToSubmit.append("appointmentStatus", status); // Add status: "success" or "failed"
-  //     // Always append payment details, even if null
-  //     formDataToSubmit.append("amount", paymentDetails?.amount || "");
-  //     formDataToSubmit.append("amountInINR", paymentDetails?.amountInINR || "");
-  //     formDataToSubmit.append("currency", paymentDetails?.currency || "");
-  //     formDataToSubmit.append("paymentStatus", paymentStatus); // Use the accumulated status string
-  //     formDataToSubmit.append("price", paymentDetails?.price || "");
-
-  //     console.log("Submitting to Google Sheet with data:", Object.fromEntries(formDataToSubmit));
-
-  //     const response = await fetch(scriptURL, { method: "POST", body: formDataToSubmit });
-  //     console.log("Google Sheet response status:", response.status, response.ok);
-  //     const responseText = await response.text();
-  //     console.log("Google Sheet response text:", responseText);
-
-  //     if (response.ok) {
-  //       if (status === "success") {
-  //         toast.success("Appointment successfully booked!");
-  //         // Don't reset form data here as we need it for the success modal
-  //         // The form will be reset when the success modal is closed
-  //       } else {
-  //         toast.error("Appointment booking failed. Please contact support.");
-  //       }
-  //     } else {
-  //       throw new Error("Failed to submit to Google Sheet");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Error processing submission");
-  //     console.error("Submission error:", error);
-  //   } finally {
-  //     setLoadingStates(prev => ({ ...prev, submittingForm: false }));
-  //     setIsSubmitting(false);
-  //   }
-  // };
-  const handleFormSubmission = async (status, paymentResponse = {}) => {
-  if (isSubmitting) return;
-  setIsSubmitting(true);
-  setLoadingStates(prev => ({ ...prev, submittingForm: true }));
-
-  try {
-    console.log(`Submitting with status: ${status}`);
-
-    // const scriptURL = "https://script.google.com/macros/s/AKfycbx1M2oQtptw8EoJJvf3voGDgrIATUHDBQzW91lMzpERUGEAbzT9fKuZ5y9t3qHxy6zcsw/exec";
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzwOaGYr3MQ2hqYBESvpcbiDvo2bFbKNYyi4fiVOuUxN1EUGqWTvddTnjLe0ftDj5bOBA/exec'
-
-    const formDataToSubmit = new FormData();
-
-    // Core form fields
-    Object.keys(formData).forEach((key) => {
-      formDataToSubmit.append(key, formData[key] || "");
-    });
-
-    // Payment & appointment related fields
-    formDataToSubmit.append("meetingLink", paymentResponse.meetingLink || "");
-    formDataToSubmit.append("paymentId", paymentResponse.paymentId || paymentResponse.razorpay_payment_id || "");
-    formDataToSubmit.append("orderId", paymentResponse.orderId || paymentResponse.razorpay_order_id || "");
-    formDataToSubmit.append("appointmentStatus", status); // "success" or "failed"
-
-    // Payment gateway details (even if payment didn't happen)
-    formDataToSubmit.append("amount", paymentDetails?.amount || "");
-    formDataToSubmit.append("amountInINR", paymentDetails?.amountInINR || "");
-    formDataToSubmit.append("currency", paymentDetails?.currency || "INR");
-    formDataToSubmit.append("price", paymentDetails?.price || commonPrice.toString());
-
-    // ── Final payment status ──
-    let finalPaymentStatus = "not attempted";
-
-    if (status === "success") {
-      finalPaymentStatus = "success";
-    } else if (paymentStatus.includes("came back")) {
-      finalPaymentStatus = "user cancelled / came back";
-    } else if (paymentStatus.includes("failed")) {
-      finalPaymentStatus = "failed";
-    } else if (paymentStatus.includes("entered details")) {
-      finalPaymentStatus = "initiated but incomplete";
-    }
-
-    formDataToSubmit.append("paymentStatus", finalPaymentStatus);
-
-    console.log("Submitting to Google Sheet:", Object.fromEntries(formDataToSubmit));
-
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      body: formDataToSubmit,
-    });
-
-    const responseText = await response.text();
-    console.log("Google Apps Script response:", response.status, responseText);
-
-    if (response.ok) {
-      if (status === "success") {
-        toast.success("Appointment successfully booked!");
-        setShowSuccessModal(true);
-      } else {
-        toast.error("Booking could not be completed. Please try again or contact support.");
-      }
-    } else {
-      throw new Error(`Google Sheet submission failed: ${response.status}`);
-    }
-  } catch (error) {
-    console.error("Submission error:", error);
-    toast.error("Error saving appointment data");
-  } finally {
-    setLoadingStates(prev => ({ ...prev, submittingForm: false }));
-    setIsSubmitting(false);
-  }
-};
-
-  const handleBookAppointment = (e) => {
-    e.preventDefault();
-    setPaymentStatus("entered details");
-    initiatePayment();
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Update price when service type changes
+    if (name === "serviceType") {
+      const service = SERVICE_TYPES.find(s => s.label === value);
+      setSelectedServicePrice(service ? service.price : 0);
+    }
+
+    // Reset time slot when booking mode changes
+    if (name === "bookingMode") {
+      setFormData((prev) => ({ ...prev, [name]: value, appointmentTime: "", serviceType: "" }));
+      setSelectedServicePrice(0);
+    }
   };
 
   const handlePhoneChange = (value) => {
@@ -436,17 +344,8 @@ const DoctorForm = () => {
   const handleDateChange = async (e) => {
     const selectedDate = e.target.value;
     setFormData((prev) => ({ ...prev, appointmentDate: selectedDate, appointmentTime: "" }));
-    // Commented out slot fetching as using fixed slots
-    /*
-    if (selectedDate) {
-      await fetchSlots(selectedDate);
-    } else {
-      setAvailableSlots([]);
-    }
-    */
     if (tokenManager.tokenExpiry < Date.now() || !tokenManager.accessToken) {
-      // const newToken = await refreshAccessToken(); // Commented out slot fetching as using fixed slots and not needing token for that
-      // console.log("Refreshed token on date change:", newToken);
+      // Token refresh if needed
     }
   };
 
@@ -454,8 +353,9 @@ const DoctorForm = () => {
     setShowSuccessModal(false);
     setGeneratedMeetingLink("");
     setCompletePaymentResponse(null);
-    setPaymentStatus(""); // Reset payment status
-    setIsSubmitting(false); // Reset submitting flag
+    setPaymentStatus("");
+    setIsSubmitting(false);
+    setSelectedServicePrice(0);
     
     // Reset form data after showing success modal
     setFormData({
@@ -468,10 +368,14 @@ const DoctorForm = () => {
       appointmentDate: "",
       appointmentTime: "",
       couponCode: "",
+      bookingMode: "online",
+      serviceType: "",
     });
-    // setAvailableSlots([]); // Commented out as not using slots
     setPaymentDetails(null);
   };
+
+  const isOnline = formData.bookingMode === "online";
+  const isOffline = formData.bookingMode === "offline";
 
   return (
     <div className="w-fit p-6 bg-white shadow-xl rounded-xl relative">
@@ -503,174 +407,264 @@ const DoctorForm = () => {
       )}
       
       <form onSubmit={handleBookAppointment} className="space-y-6">
-        <div className="flex gap-4">
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <User className="w-5 h-5 text-gray-400 ml-3" />
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name <span className="text-gray-400 italic text-xs">(optional)</span>
-            </label>
-            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <User className="w-5 h-5 text-gray-400 ml-3" />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
 
+        {/* ── Booking Mode Selection ── */}
         <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-          <PhoneInput
-            country={"in"}
-            countryCodeEditable={false}
-            value={formData.phone}
-            onChange={handlePhoneChange}
-            inputProps={{ name: "phone", required: true }}
-            containerStyle={{ width: "100%" }}
-            inputStyle={{
-              width: "100%",
-              padding: "25px",
-              paddingLeft: "45px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-        </div>
-
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
-          <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-            <Mail className="w-5 h-5 text-gray-400 ml-3" />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email ID"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
-            />
-          </div>
-          <p className="text-xs text-gray-500 italic">Meeting Link will be sent to your email</p>
-        </div>
-
-        {/* Commented out Preferred Meeting Type and Meeting Contact fields for future use
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Meeting Type</label>
-          <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-            <MessageSquare className="w-5 h-5 text-gray-400 ml-3" />
-            <select
-              name="meetingType"
-              value={formData.meetingType}
-              onChange={handleChange}
-              required
-              className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
+          <label className="block text-sm font-medium text-gray-700 mb-2">Consultation Type</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label
+              className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                isOnline
+                  ? "border-blue-500 bg-blue-50 shadow-md"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              }`}
             >
-              <option value="">Select Meeting Type</option>
-              <option value="Google Meet">Google Meet</option>
-            </select>
-          </div>
-        </div>
-        {formData.meetingType && (
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address For Meet Link</label>
-            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <Mail className="w-5 h-5 text-gray-400 ml-3" />
               <input
-                type="email"
-                name="meetingContact"
-                value={formData.meetingContact}
-                placeholder="Email ID for Meet Link"
+                type="radio"
+                name="bookingMode"
+                value="online"
+                checked={isOnline}
                 onChange={handleChange}
                 required
-                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+                className="sr-only"
               />
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                isOnline ? "border-blue-500" : "border-gray-300"
+              }`}>
+                {isOnline && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-blue-500" />
+                  <span className="font-semibold text-gray-800">Online Consultation</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Video call from the comfort of your home</p>
+              </div>
+            </label>
+
+            <label
+              className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                isOffline
+                  ? "border-green-500 bg-green-50 shadow-md"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="bookingMode"
+                value="offline"
+                checked={isOffline}
+                onChange={handleChange}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                isOffline ? "border-green-500" : "border-gray-300"
+              }`}>
+                {isOffline && <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-green-600" />
+                  <span className="font-semibold text-gray-800">Offline Consultation</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Visit Asha Neuro Clinic in person</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Show clinic info when offline is selected */}
+        {isOffline && (
+          <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <MapPin className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-green-800">Asha Neuro Clinic</p>
+              <p className="text-xs text-green-600">Shop Number F - 21, Sreeman Rama Complex, Hyderabad</p>
             </div>
           </div>
         )}
-        */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Date</label>
-            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <Calendar className="w-5 h-5 text-gray-400 ml-3" />
-              <input
-                type="date"
-                name="appointmentDate"
-                value={formData.appointmentDate}
-                onChange={handleDateChange}
-                required
-                min={new Date().toISOString().split("T")[0]}
-                max={new Date(new Date().setMonth(new Date().getMonth() + 5)).toISOString().split("T")[0]}
-                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+        {/* ── Name Fields ── */}
+        {formData.bookingMode && (
+          <>
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                  <User className="w-5 h-5 text-gray-400 ml-3" />
+                  <input
+                    type="text"
+                    name="firstName"
+                    placeholder="First Name"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="relative flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name <span className="text-gray-400 italic text-xs">(optional)</span>
+                </label>
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                  <User className="w-5 h-5 text-gray-400 ml-3" />
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <PhoneInput
+                country={"in"}
+                countryCodeEditable={false}
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                inputProps={{ name: "phone", required: true }}
+                containerStyle={{ width: "100%" }}
+                inputStyle={{
+                  width: "100%",
+                  padding: "25px",
+                  paddingLeft: "45px",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                }}
               />
             </div>
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Time</label>
-            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-              <Clock className="w-5 h-5 text-gray-400 ml-3" />
-              <select
-                name="appointmentTime"
-                value={formData.appointmentTime}
-                onChange={handleChange}
-                required
-                className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
-              >
-                <option value="">Select a time slot</option>
-                <option value="Morning (9am-12pm)">Morning (9am-12pm) - ₹{commonPrice}</option>
-                <option value="Afternoon (2-4pm)">Afternoon (2-4pm) - ₹{commonPrice}</option>
-                <option value="Evening (6-8pm)">Evening (6-8pm) - ₹{commonPrice}</option>
-              </select>
+
+            {/* Email */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
+              <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                <Mail className="w-5 h-5 text-gray-400 ml-3" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email ID"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500 italic">
+                {isOnline
+                  ? "Meeting Link will be sent to your email"
+                  : "Appointment confirmation will be sent to your email"}
+              </p>
             </div>
-          </div>
-        </div>
 
-        {/* Commented out Coupon Code field for future use
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code (Optional)</label>
-          <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
-            <input
-              type="text"
-              name="couponCode"
-              placeholder="Enter coupon code"
-              value={formData.couponCode}
-              onChange={handleChange}
-              className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
-            />
-          </div>
-        </div>
-        */}
+            {/* Date & Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Date</label>
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                  <Calendar className="w-5 h-5 text-gray-400 ml-3" />
+                  <input
+                    type="date"
+                    name="appointmentDate"
+                    value={formData.appointmentDate}
+                    onChange={handleDateChange}
+                    required
+                    min={new Date().toISOString().split("T")[0]}
+                    max={new Date(new Date().setMonth(new Date().getMonth() + 5)).toISOString().split("T")[0]}
+                    className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Time</label>
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                  <Clock className="w-5 h-5 text-gray-400 ml-3" />
+                  <select
+                    name="appointmentTime"
+                    value={formData.appointmentTime}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
+                  >
+                    <option value="">Select a time slot</option>
+                    {isOnline ? (
+                      <>
+                        <option value="Morning (5am-8am)">Morning (5am - 8am)</option>
+                        <option value="Morning (9am-12pm)">Morning (9am - 12pm)</option>
+                        <option value="Afternoon (2pm-4pm)">Afternoon (2pm - 4pm)</option>
+                        <option value="Evening (6pm-8pm)">Evening (6pm - 8pm)</option>
+                      </>
+                    ) : (
+                      <option value="11am - 7pm">11am - 7pm</option>
+                    )}
+                  </select>
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <Info className="w-3 h-3 text-gray-400" />
+                  <p className="text-xs text-gray-400">Each session is 45 minutes</p>
+                </div>
+              </div>
+            </div>
 
-        <button
-          type="submit"
-          className="w-full bg-[#1376F8] text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={loadingStates.initiatingPayment || loadingStates.submittingForm}
-        >
-          {loadingStates.initiatingPayment ? "Initiating Payment..." : 
-           loadingStates.submittingForm ? "Processing..." : 
-           "Book Appointment"}
-        </button>
+            {/* ── Service Type Dropdown ── */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type of Service</label>
+              <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+                <Stethoscope className="w-5 h-5 text-gray-400 ml-3" />
+                <select
+                  name="serviceType"
+                  value={formData.serviceType}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
+                >
+                  <option value="">Select a service</option>
+                  {SERVICE_TYPES.map((service) => (
+                    <option key={service.label} value={service.label}>
+                      {service.label} {isOnline ? `- ₹${service.price.toLocaleString("en-IN")}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {isOnline && selectedServicePrice > 0 && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Info className="w-3 h-3 text-blue-400" />
+                  <p className="text-xs text-blue-500 font-medium">
+                    Consultation fee: ₹{selectedServicePrice.toLocaleString("en-IN")}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className={`w-full text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-400 disabled:cursor-not-allowed ${
+                isOffline
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-[#1376F8] hover:bg-[#0d5fd6]"
+              }`}
+              disabled={loadingStates.initiatingPayment || loadingStates.submittingForm}
+            >
+              {loadingStates.initiatingPayment ? "Initiating Payment..." : 
+               loadingStates.submittingForm ? "Processing..." : 
+               isOffline ? "Book Offline Appointment" :
+               `Book Appointment  ${selectedServicePrice > 0 ? "₹" + selectedServicePrice.toLocaleString("en-IN") : ""}`}
+            </button>
+
+            {isOffline && (
+              <p className="text-xs text-center text-gray-400 -mt-2">
+                No payment required for offline consultations
+              </p>
+            )}
+          </>
+        )}
       </form>
 
       {/* Success Modal */}
