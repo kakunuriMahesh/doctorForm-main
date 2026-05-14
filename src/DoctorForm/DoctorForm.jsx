@@ -19,16 +19,10 @@ const {
 
 console.log("Env variables:", { clientId, clientSecret, refreshToken: initialRefreshToken });
 
-// Service types with pricing
-const SERVICE_TYPES = [
-  { label: "General Counselling", price: 2000 },
-  { label: "Cognitive Behaviour Therapy (CBT)", price: 2000 },
-  { label: "Dialectical Behaviour Therapy (DBT)", price: 2000 },
-  { label: "Marital or Couples Therapy", price: 3000 },
-];
+
 
 const DoctorForm = () => {
-  const localhost = "http://localhost:5001";
+  // const localhost = "http://localhost:5001";
   const production = "https://doctor-backend-pay.onrender.com";
 
   const [formData, setFormData] = useState({
@@ -48,6 +42,8 @@ const DoctorForm = () => {
   const [selectedServicePrice, setSelectedServicePrice] = useState(0);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [serviceConfig, setServiceConfig] = useState(null);
+  const [loadingServices, setLoadingServices] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [timer, setTimer] = useState(300);
@@ -78,6 +74,61 @@ const DoctorForm = () => {
     }
     return () => clearInterval(interval);
   }, [showPaymentModal, timer]);
+
+  useEffect(() => {
+    const fetchServiceConfig = async () => {
+      setLoadingServices(true);
+      try {
+        const response = await axios.get(`https://s-doctorbackend-admin.onrender.com/api/service-configs`);
+        // const response = await axios.get(`http://localhost:5000/api/service-configs`);
+        console.log("Service config response:", response.data);
+        if (response.data) {
+          let onlineConfig = null;
+          if (Array.isArray(response.data)) {
+            onlineConfig = response.data.find(c => c.mode === 'online') || response.data[0];
+          } else {
+            onlineConfig = response.data;
+          }
+
+          if (onlineConfig) {
+            setServiceConfig(onlineConfig);
+            
+            const start = onlineConfig.timeStart;
+            const end = onlineConfig.timeEnd;
+            const duration = onlineConfig.sessionDuration;
+          
+          if (start && end && duration) {
+            const slots = [];
+            const parseTime = (timeStr) => {
+              const [hours, minutes] = timeStr.split(':').map(Number);
+              const date = new Date();
+              date.setHours(hours, minutes, 0, 0);
+              return date;
+            };
+
+            let currentTime = parseTime(start);
+            const endTime = parseTime(end);
+
+            while (currentTime < endTime) {
+              const slotStart = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              currentTime.setMinutes(currentTime.getMinutes() + duration);
+              if (currentTime > endTime) break;
+              const slotEnd = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              slots.push(`${slotStart} - ${slotEnd}`);
+            }
+            setAvailableSlots(slots);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching service config:', error);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+    fetchServiceConfig();
+  // }, [localhost]);
+  }, []);
 
   const refreshAccessToken = async () => {
     setLoadingStates(prev => ({ ...prev, refreshingToken: true }));
@@ -119,7 +170,7 @@ const DoctorForm = () => {
   const initiatePayment = async () => {
     setLoadingStates(prev => ({ ...prev, initiatingPayment: true }));
     try {
-      const response = await axios.post(`${localhost}/api/create-order`, {
+      const response = await axios.post(`${production}/api/create-order`, {
         ...formData,
         price: selectedServicePrice,
       });
@@ -134,7 +185,7 @@ const DoctorForm = () => {
         handler: async function (response) {
           try {
             setGeneratedMeetingLink("");
-            const verifyResponse = await axios.post(`${localhost}/api/verify-payment`, {
+            const verifyResponse = await axios.post(`${production}/api/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -299,7 +350,7 @@ const DoctorForm = () => {
     setLoadingStates(prev => ({ ...prev, submittingForm: true }));
     try {
       // Save offline appointment to database
-      const dbResponse = await axios.post(`${localhost}/api/book-offline`, {
+      const dbResponse = await axios.post(`${production}/api/book-offline`, {
         ...formData
       });
       console.log('Offline DB response:', dbResponse.data);
@@ -326,7 +377,7 @@ const DoctorForm = () => {
 
     // Update price when service type changes
     if (name === "serviceType") {
-      const service = SERVICE_TYPES.find(s => s.label === value);
+      const service = serviceConfig?.services?.find(s => s.name === value);
       setSelectedServicePrice(service ? service.price : 0);
     }
 
@@ -473,19 +524,29 @@ const DoctorForm = () => {
           </div>
         </div>
 
-        {/* Show clinic info when offline is selected */}
+        {/* Show clinic info and call button when offline is selected */}
         {isOffline && (
-          <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <MapPin className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-green-800">Asha Neuro Clinic</p>
-              <p className="text-xs text-green-600">Shop Number F - 21, Sreeman Rama Complex, Hyderabad</p>
+          <div className="flex flex-col items-center gap-4 py-8 px-4 bg-green-50 border border-green-200 rounded-xl text-center shadow-sm">
+            <div className="bg-green-100 p-4 rounded-full">
+              <MapPin className="w-8 h-8 text-green-600" />
             </div>
+            <div>
+              <h3 className="text-xl font-bold text-green-800 mb-2">Asha Neuro Clinic</h3>
+              <p className="text-green-700 max-w-sm mx-auto">
+                Shop Number F - 21, Sreeman Rama Complex, Hyderabad
+              </p>
+            </div>
+            <a 
+              href="tel:+919618769203"
+              className="mt-4 text-white bg-green-600 hover:bg-green-700 py-3 px-8 rounded-lg font-semibold transition inline-block w-full sm:w-auto shadow-md"
+            >
+              Call to Book Appointment
+            </a>
           </div>
         )}
 
-        {/* ── Name Fields ── */}
-        {formData.bookingMode && (
+        {/* ── Online Booking Form Fields ── */}
+        {isOnline && (
           <>
             <div className="flex gap-4">
               <div className="relative flex-1">
@@ -593,15 +654,12 @@ const DoctorForm = () => {
                     className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
                   >
                     <option value="">Select a time slot</option>
-                    {isOnline ? (
-                      <>
-                        <option value="Morning (5am-8am)">Morning (5am - 8am)</option>
-                        <option value="Morning (9am-12pm)">Morning (9am - 12pm)</option>
-                        <option value="Afternoon (2pm-4pm)">Afternoon (2pm - 4pm)</option>
-                        <option value="Evening (6pm-8pm)">Evening (6pm - 8pm)</option>
-                      </>
+                    {availableSlots.length > 0 ? (
+                      availableSlots.map((slot, idx) => (
+                        <option key={idx} value={slot}>{slot}</option>
+                      ))
                     ) : (
-                      <option value="11am - 7pm">11am - 7pm</option>
+                      <option value="" disabled>Loading slots...</option>
                     )}
                   </select>
                 </div>
@@ -625,9 +683,9 @@ const DoctorForm = () => {
                   className="w-full p-3 pl-2 border-none rounded-lg focus:outline-none appearance-none"
                 >
                   <option value="">Select a service</option>
-                  {SERVICE_TYPES.map((service) => (
-                    <option key={service.label} value={service.label}>
-                      {service.label} {isOnline ? `- ₹${service.price.toLocaleString("en-IN")}` : ""}
+                  {serviceConfig?.services?.filter(s => s.isActive).map((service) => (
+                    <option key={service.name} value={service.name}>
+                      {service.name} {isOnline ? `- ₹${service.price.toLocaleString("en-IN")}` : ""}
                     </option>
                   ))}
                 </select>
@@ -645,24 +703,13 @@ const DoctorForm = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-400 disabled:cursor-not-allowed ${
-                isOffline
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-[#1376F8] hover:bg-[#0d5fd6]"
-              }`}
+              className="w-full text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-400 disabled:cursor-not-allowed bg-[#1376F8] hover:bg-[#0d5fd6]"
               disabled={loadingStates.initiatingPayment || loadingStates.submittingForm}
             >
               {loadingStates.initiatingPayment ? "Initiating Payment..." : 
                loadingStates.submittingForm ? "Processing..." : 
-               isOffline ? "Book Offline Appointment" :
                `Book Appointment  ${selectedServicePrice > 0 ? "₹" + selectedServicePrice.toLocaleString("en-IN") : ""}`}
             </button>
-
-            {isOffline && (
-              <p className="text-xs text-center text-gray-400 -mt-2">
-                No payment required for offline consultations
-              </p>
-            )}
           </>
         )}
       </form>
